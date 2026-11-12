@@ -80,7 +80,7 @@ async function runChecks(ctx: Context): Promise<Check[]> {
 }
 
 export function doctorCommand(io: () => IO): Command {
-  return new Command("doctor").description("Check that rw is set up and can reach Rockware").action(
+  return new Command("doctor").description("Check that the Rockware CLI is set up and can reach Rockware").action(
     action(io, async (ctx) => {
       const checks = await runChecks(ctx);
       const failed = checks.filter((check) => !check.ok);
