@@ -1,0 +1,121 @@
+rw -v, --version
+rw -P, --profile <name>
+rw --json
+rw -q, --quiet
+rw --no-color
+rw auth login
+rw auth login --host <tenant|url>
+rw auth login --with-token
+rw auth login --scope <scope>
+rw auth login --no-browser
+rw auth login --expect-site <id>
+rw auth login --default
+rw auth status
+rw auth logout
+rw profile list
+rw profile use
+rw profile use <name>
+rw profile remove
+rw profile remove <name>
+rw site
+rw workcenters list
+rw workcenters list --limit <n>
+rw workcenters list --all
+rw workcenters list --after <cursor>
+rw workcenters list --updated-since <time>
+rw workcenters list --include-deleted
+rw workcenters show
+rw workcenters show <id>
+rw stations list
+rw stations list --limit <n>
+rw stations list --all
+rw stations list --after <cursor>
+rw stations list --updated-since <time>
+rw stations list --include-deleted
+rw stations show
+rw stations show <id>
+rw jobs list
+rw jobs list --limit <n>
+rw jobs list --all
+rw jobs list --after <cursor>
+rw jobs list --updated-since <time>
+rw jobs list --include-deleted
+rw jobs show
+rw jobs show <id>
+rw products list
+rw products list --limit <n>
+rw products list --all
+rw products list --after <cursor>
+rw products list --updated-since <time>
+rw products list --include-deleted
+rw products show
+rw products show <id>
+rw products upsert
+rw products upsert [file]
+rw products upsert --data <json>
+rw products upsert --source <name>
+rw materials list
+rw materials list --limit <n>
+rw materials list --all
+rw materials list --after <cursor>
+rw materials list --updated-since <time>
+rw materials list --include-deleted
+rw materials show
+rw materials show <id>
+rw materials upsert
+rw materials upsert [file]
+rw materials upsert --data <json>
+rw materials upsert --source <name>
+rw customers list
+rw customers list --limit <n>
+rw customers list --all
+rw customers list --after <cursor>
+rw customers list --updated-since <time>
+rw customers list --include-deleted
+rw customers show
+rw customers show <id>
+rw orders list
+rw orders list --limit <n>
+rw orders list --all
+rw orders list --after <cursor>
+rw orders list --updated-since <time>
+rw orders list --include-deleted
+rw orders show
+rw orders show <id>
+rw orders upsert
+rw orders upsert [file]
+rw orders upsert --data <json>
+rw orders upsert --source <name>
+rw webhooks list
+rw webhooks events
+rw webhooks create
+rw webhooks create --url <url>
+rw webhooks create --event <events>
+rw webhooks create --disabled
+rw webhooks update
+rw webhooks update <id>
+rw webhooks update --url <url>
+rw webhooks update --event <events>
+rw webhooks update --enable
+rw webhooks update --disable
+rw webhooks delete
+rw webhooks delete <id>
+rw webhooks delete --yes
+rw webhooks rotate-secret
+rw webhooks rotate-secret <id>
+rw webhooks test
+rw webhooks test <id>
+rw webhooks deliveries
+rw webhooks deliveries <id>
+rw webhooks deliveries --status <status>
+rw webhooks deliveries --limit <n>
+rw webhooks redeliver
+rw webhooks redeliver <delivery-id>
+rw api
+rw api <query>
+rw api --var <name=value>
+rw api --variables <json>
+rw doctor
+rw commands
+rw completion
+rw completion <shell>

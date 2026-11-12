@@ -1,0 +1,1020 @@
+"""One material a product uses."""
+input BomLineInput {
+  itemCost: Float
+
+  """
+  The material's externalId (sent before, or in the same call), or its material number.
+  """
+  material: String!
+
+  """How much of it one part uses."""
+  weight: Float
+  weightUnits: WeightUnit
+}
+
+"""Someone orders are made for."""
+type Customer {
+  createdAt: DateTime!
+  deletedAt: DateTime
+
+  """
+  Its ids in your own systems: the externalId you sent it with, one for each source.
+  """
+  externalIds: [ExternalId!]!
+  id: ID!
+  name: String!
+  updatedAt: DateTime!
+}
+
+type CustomerConnection {
+  nodes: [Customer!]!
+  pageInfo: PageInfo!
+}
+
+"""
+Who the order is for. Made the first time, renamed if the name changes.
+"""
+input CustomerInput {
+  """Its id in your system."""
+  externalId: String!
+  name: String!
+}
+
+"""
+A point in time, as an ISO 8601 string with a time zone (e.g. 2026-11-02T14:30:00.000Z).
+"""
+scalar DateTime
+
+"""
+An exact decimal number, as a string (e.g. "12.5000"), so no precision is lost.
+"""
+scalar Decimal
+
+"""A record's id in one of your own systems."""
+type ExternalId {
+  id: String!
+
+  """The system, e.g. "erp"."""
+  source: String!
+}
+
+"""Records you can't send in, so you link your ids to them instead."""
+enum ExternalIdKind {
+  JOB
+  STATION
+  WORKCENTER
+}
+
+input ExternalIdLinkInput {
+  """Its id in your system."""
+  externalId: String!
+
+  """The record's id in IMM (from stations, jobs or workcenters)."""
+  id: ID!
+
+  """true takes this link off instead."""
+  remove: Boolean
+}
+
+"""
+A job: what a station runs, with its standards. Fields are from its current version.
+"""
+type Job {
+  archivedAt: DateTime
+  createdAt: DateTime!
+  deletedAt: DateTime
+  description: String
+
+  """
+  Its ids in your own systems: the externalId you sent it with, one for each source.
+  """
+  externalIds: [ExternalId!]!
+  id: ID!
+  name: String
+  productsPerCycle: Int
+
+  """Seconds per cycle."""
+  standardCycle: Decimal
+  standardQuantity: Decimal
+  standardRate: Decimal
+  standardRateUnit: String
+  updatedAt: DateTime!
+  version: Int
+}
+
+type JobConnection {
+  nodes: [Job!]!
+  pageInfo: PageInfo!
+}
+
+"""A run in a station's lineup now, with its counts and predicted times."""
+type LineupEntry {
+  """Predicted to end after endBy."""
+  endByAtRisk: Boolean!
+
+  """0 is the running run, or the next one if none is running."""
+  position: Int!
+  predictedChangeoverStart: DateTime!
+
+  """When it will meet its count, predicted."""
+  predictedEnd: DateTime!
+
+  """First production, predicted."""
+  predictedStart: DateTime!
+  progress: [LineupPartProgress!]!
+  run: ProductionRun!
+
+  """Predicted to start after startBy."""
+  startByAtRisk: Boolean!
+}
+
+"""How far one part of a run has got."""
+type LineupPartProgress {
+  """Good so far. 0 until the run is running."""
+  good: Float!
+  productId: ID!
+  requiredGood: Decimal!
+
+  """Scrap so far. 0 until the run is running."""
+  scrap: Float!
+}
+
+"""
+If errors is not empty, nothing was saved: fix them and send the whole list again.
+"""
+type LinkExternalIdsPayload {
+  errors: [UpsertError!]!
+  results: [LinkedExternalId!]!
+}
+
+type LinkedExternalId {
+  """
+  CREATED for a new link, UPDATED when one was taken off, UNCHANGED when it was already so.
+  """
+  action: UpsertAction!
+  externalId: String!
+  id: ID!
+}
+
+"""A material the plant uses. Fields are from its current version."""
+type Material {
+  archivedAt: DateTime
+  classification: String
+  createdAt: DateTime!
+  deletedAt: DateTime
+  description: String
+
+  """
+  Its ids in your own systems: the externalId you sent it with, one for each source.
+  """
+  externalIds: [ExternalId!]!
+
+  """The number in your own system."""
+  externalNumber: String
+  id: ID!
+  materialNumber: String
+  name: String
+  shortCode: String
+  unitCost: Decimal
+  updatedAt: DateTime!
+  version: Int
+}
+
+type MaterialConnection {
+  nodes: [Material!]!
+  pageInfo: PageInfo!
+}
+
+"""A material. Fields left out are left as they are."""
+input MaterialInput {
+  description: String
+
+  """Its id in your system."""
+  externalId: String!
+  externalNumber: String
+
+  """
+  The plant's material number. Defaults to externalId. A new externalId matches a material with this number.
+  """
+  materialNumber: String
+  name: String
+  shortCode: String
+  unitCost: Float
+
+  """The unit it is stocked in."""
+  weightUnits: WeightUnit
+}
+
+"""
+Send records in from your own systems. Needs a token with the data:write scope. Each one is matched by its externalId: made the first time, updated after that.
+"""
+type Mutation {
+  """
+  Make a webhook. Its signing secret is in the answer, and only there. Needs webhooks:write.
+  """
+  createWebhook(webhook: WebhookInput!): WebhookWithSecret!
+
+  """Delete a webhook. Its retries stop. Needs webhooks:write."""
+  deleteWebhook(id: ID!): Boolean!
+
+  """
+  Give up to 100 stations, jobs or workcenters your own ids, by their id in IMM. From then on you can use your id wherever the API takes theirs, and renaming them in IMM changes nothing. An id another record already has is refused, not moved. All or nothing. Safe to send again.
+  """
+  linkExternalIds(
+    kind: ExternalIdKind!
+    links: [ExternalIdLinkInput!]!
+
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+  ): LinkExternalIdsPayload!
+
+  """Send a delivery again, soon. Needs webhooks:write."""
+  redeliverWebhook(deliveryId: ID!): WebhookDelivery!
+
+  """
+  Give a webhook a new signing secret. The old one stops working now. Needs webhooks:write.
+  """
+  rotateWebhookSecret(id: ID!): WebhookWithSecret!
+
+  """
+  Send a "webhook.test" event now, and see how your URL answered. Needs webhooks:write.
+  """
+  sendTestWebhook(id: ID!): WebhookDelivery!
+
+  """
+  Put runs in order at one station, by your ids. They take the places they already hold in its queue, in the order given, and every other run stays where it is. Only queued runs. Safe to send again.
+  """
+  sequenceLineup(
+    """The runs' externalIds, in the order to run them."""
+    runs: [String!]!
+
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+
+    """The station's externalId, or its id."""
+    station: String!
+  ): SequenceLineupPayload!
+
+  """
+  Change a webhook's URL, events or whether it's on. Needs webhooks:write.
+  """
+  updateWebhook(id: ID!, webhook: WebhookUpdateInput!): Webhook!
+
+  """
+  Send up to 100 materials. All or nothing: if one has a problem, none are saved.
+  """
+  upsertMaterials(
+    materials: [MaterialInput!]!
+
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+  ): UpsertMaterialsPayload!
+
+  """
+  Send one order, with its customer and lines. Safe to send again: the same order gives the same result.
+  """
+  upsertOrder(
+    order: OrderInput!
+
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+  ): UpsertOrderPayload!
+
+  """
+  Send up to 100 runs to stations' lineups. A new run goes to the end of its station's queue; an update never moves it, because the plant can reorder runs. Changing a queued run's station or job takes it off and adds it again at the end. The lineup's rules are the same as in IMM: a running run can change its counts and dates only, and a closed one nothing. Safe to send again.
+  """
+  upsertProductionRuns(
+    runs: [ProductionRunInput!]!
+
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+  ): UpsertProductionRunsPayload!
+
+  """
+  Send up to 100 products, with their bills of materials. All or nothing: if one has a problem, none are saved. Send materials first.
+  """
+  upsertProducts(
+    products: [ProductInput!]!
+
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+  ): UpsertProductsPayload!
+}
+
+"""A production order."""
+type Order {
+  cancelledAt: DateTime
+  completedAt: DateTime
+  createdAt: DateTime!
+  customer: Customer
+  customerId: ID
+  defaultTargetQuantity: Decimal!
+  deletedAt: DateTime
+  dueDate: DateTime
+
+  """
+  Its ids in your own systems: the externalId you sent it with, one for each source.
+  """
+  externalIds: [ExternalId!]!
+  id: ID!
+  lines: [OrderLine!]!
+  notes: String
+  openedAt: DateTime
+  orderNumber: String!
+  poNumber: String
+  startDate: DateTime
+  status: OrderStatus!
+  updatedAt: DateTime!
+}
+
+type OrderConnection {
+  nodes: [Order!]!
+  pageInfo: PageInfo!
+}
+
+"""
+An order. Fields left out are left as they are; null clears one that can be empty.
+"""
+input OrderInput {
+  """
+  true cancels the order. A cancelled order can't be opened again. Completing happens in the plant.
+  """
+  cancel: Boolean
+
+  """null takes the customer off the order."""
+  customer: CustomerInput
+  defaultTargetQuantity: Float
+  dueDate: DateTime
+
+  """Its id in your system."""
+  externalId: String!
+
+  """
+  Every line the order should have. Lines not listed are removed. Leave it out to keep the lines.
+  """
+  lines: [OrderLineInput!]
+  notes: String
+
+  """
+  The plant's order number. Defaults to externalId. A new externalId matches an order with this number.
+  """
+  orderNumber: String
+  poNumber: String
+  startDate: DateTime
+}
+
+"""One product on an order, and how many."""
+type OrderLine {
+  id: ID!
+  product: Product
+  productId: ID!
+  targetQuantity: Decimal!
+}
+
+input OrderLineInput {
+  """The product's externalId, or its SKU."""
+  product: String!
+
+  """How many to make."""
+  targetQuantity: Float!
+}
+
+enum OrderStatus {
+  CANCELLED
+  COMPLETED
+  OPEN
+}
+
+"""
+Where a page ends. Pass endCursor as `after` to get the next page, or later, the next changes.
+"""
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+
+"""A part the plant makes. Fields are from its current version."""
+type Product {
+  archivedAt: DateTime
+  createdAt: DateTime!
+  deletedAt: DateTime
+  description: String
+
+  """
+  Its ids in your own systems: the externalId you sent it with, one for each source.
+  """
+  externalIds: [ExternalId!]!
+
+  """The SKU in your own system."""
+  externalSku: String
+  id: ID!
+  itemCost: Decimal
+  name: String
+  sku: String
+  updatedAt: DateTime!
+  version: Int
+  weight: Decimal
+}
+
+type ProductConnection {
+  nodes: [Product!]!
+  pageInfo: PageInfo!
+}
+
+"""A product. Fields left out are left as they are."""
+input ProductInput {
+  description: String
+
+  """Its id in your system."""
+  externalId: String!
+  externalSku: String
+  itemCost: Float
+
+  """
+  Its bill of materials. Listed materials are added or updated; ones not listed are left alone.
+  """
+  materials: [BomLineInput!]
+  name: String
+
+  """
+  The plant's SKU. Defaults to externalId. A new externalId matches a product with this SKU.
+  """
+  sku: String
+
+  """Part weight."""
+  weight: Float
+  weightUnits: WeightUnit
+}
+
+"""
+A production run: one job planned at one station. A station's lineup is its schedule of production runs. A closed run is the build-to-schedule record: what was planned beside what happened.
+"""
+type ProductionRun {
+  """Scheduled minutes from the job change to first production."""
+  actualChangeoverMinutes: Int
+  closeReason: ProductionRunCloseReason
+  closedAt: DateTime
+
+  """The plant's business day (YYYY-MM-DD), in the site's time zone."""
+  closedBusinessDate: String
+  createdAt: DateTime!
+
+  """Should end by: raises an alert when at risk."""
+  endBy: DateTime
+  endByMissed: Boolean!
+
+  """
+  Its ids in your own systems, such as your work order id: one for each source.
+  """
+  externalIds: [ExternalId!]!
+  id: ID!
+  job: Job
+
+  """When the station changed to its job."""
+  jobChangedAt: DateTime
+  jobId: ID!
+  parts: [ProductionRunPart!]!
+
+  """The plant's business day (YYYY-MM-DD), in the site's time zone."""
+  plannedBusinessDate: String
+
+  """Changeover minutes planned, set when it starts."""
+  plannedChangeoverMinutes: Int
+
+  """The planned end, the same way."""
+  plannedEnd: DateTime
+
+  """The shift of the planned start."""
+  plannedShiftName: String
+
+  """
+  The planned start, by the job's standard, as of the last change to the lineup.
+  """
+  plannedStart: DateTime
+
+  """When every part met its count."""
+  quantityMetAt: DateTime
+
+  """
+  Its place among the station's queued runs: lower runs first. Station.lineup has the order now.
+  """
+  rank: Int!
+
+  """First production after the changeover."""
+  runStartedAt: DateTime
+
+  """How many times another run started in its place."""
+  skipCount: Int!
+
+  """Should start by: raises an alert when at risk."""
+  startBy: DateTime
+  startByMissed: Boolean!
+  station: Station
+  stationId: ID!
+  status: ProductionRunStatus!
+  updatedAt: DateTime!
+  workcenterId: ID!
+}
+
+"""How a run closed."""
+enum ProductionRunCloseReason {
+  """Every part met its count."""
+  MET
+
+  """Every part met its count, and at least one went over the tolerance."""
+  OVER
+
+  """The job changed before every part met its count."""
+  SHORT
+
+  """Skipped and closed without running: a missed plan."""
+  SKIPPED
+}
+
+type ProductionRunConnection {
+  nodes: [ProductionRun!]!
+  pageInfo: PageInfo!
+}
+
+"""
+A run: one job at one station, such as one of your work orders. Fields left out are left as they are; null clears startBy or endBy.
+"""
+input ProductionRunInput {
+  """
+  true takes a queued run off the lineup. A running run is ended in the plant.
+  """
+  cancel: Boolean
+
+  """Should end by. Raises an alert in the plant when at risk."""
+  endBy: DateTime
+
+  """Its id in your system, such as your work order id."""
+  externalId: String!
+
+  """The job's externalId, or its id. Needed for a new run."""
+  job: String
+
+  """Good ones needed, per part. Wins over quantity for the parts it names."""
+  parts: [ProductionRunPartInput!]
+
+  """Good ones needed, for every part the job makes."""
+  quantity: Float
+
+  """Should start by. Raises an alert in the plant when at risk."""
+  startBy: DateTime
+
+  """The station's externalId, or its id. Needed for a new run."""
+  station: String
+}
+
+"""One product a run makes, and how many good ones it needs."""
+type ProductionRunPart {
+  """
+  Good ones made, saved when the run closes. For a running run, see Station.lineup.
+  """
+  goodCount: Decimal
+
+  """When it reached its count."""
+  metAt: DateTime
+
+  """How many each cycle makes."""
+  perCycle: Int!
+  product: Product
+  productId: ID!
+
+  """Good ones needed."""
+  requiredGood: Decimal!
+
+  """Scrap, saved when the run closes."""
+  scrapCount: Decimal
+}
+
+input ProductionRunPartInput {
+  """
+  The product's externalId, its id, or its SKU. The run's job must make it.
+  """
+  product: String!
+
+  """Good ones needed."""
+  requiredGood: Float!
+}
+
+"""Where a run is in its life. CLOSED and REMOVED are final."""
+enum ProductionRunStatus {
+  """
+  Rolled off when the station changed to another job, or skipped. See closeReason.
+  """
+  CLOSED
+
+  """Waiting its turn at the station."""
+  QUEUED
+
+  """Taken off the lineup before it ran."""
+  REMOVED
+
+  """The station changed to its job; it's counting toward it."""
+  RUNNING
+}
+
+"""Read your site's records. Every query is limited to your token's site."""
+type Query {
+  customer(id: ID!): Customer
+
+  """Customer records at your site, oldest change first."""
+  customers(
+    """The endCursor of the previous page."""
+    after: String
+
+    """How many (1 to 100, default 50)."""
+    first: Int
+
+    """Include deleted records (they have deletedAt set)."""
+    includeDeleted: Boolean
+
+    """Only records changed at or after this time."""
+    updatedSince: DateTime
+  ): CustomerConnection!
+  job(id: ID!): Job
+
+  """Job records at your site, oldest change first."""
+  jobs(
+    """The endCursor of the previous page."""
+    after: String
+
+    """How many (1 to 100, default 50)."""
+    first: Int
+
+    """Include deleted records (they have deletedAt set)."""
+    includeDeleted: Boolean
+
+    """Only records changed at or after this time."""
+    updatedSince: DateTime
+  ): JobConnection!
+  material(id: ID!): Material
+
+  """Material records at your site, oldest change first."""
+  materials(
+    """The endCursor of the previous page."""
+    after: String
+
+    """How many (1 to 100, default 50)."""
+    first: Int
+
+    """Include deleted records (they have deletedAt set)."""
+    includeDeleted: Boolean
+
+    """Only records changed at or after this time."""
+    updatedSince: DateTime
+  ): MaterialConnection!
+  order(id: ID!): Order
+
+  """Order records at your site, oldest change first."""
+  orders(
+    """The endCursor of the previous page."""
+    after: String
+
+    """How many (1 to 100, default 50)."""
+    first: Int
+
+    """Include deleted records (they have deletedAt set)."""
+    includeDeleted: Boolean
+
+    """Only records changed at or after this time."""
+    updatedSince: DateTime
+  ): OrderConnection!
+  product(id: ID!): Product
+  productionRun(id: ID!): ProductionRun
+
+  """ProductionRun records at your site, oldest change first."""
+  productionRuns(
+    """The endCursor of the previous page."""
+    after: String
+
+    """How many (1 to 100, default 50)."""
+    first: Int
+
+    """Include deleted records (they have deletedAt set)."""
+    includeDeleted: Boolean
+
+    """Only records changed at or after this time."""
+    updatedSince: DateTime
+  ): ProductionRunConnection!
+
+  """Product records at your site, oldest change first."""
+  products(
+    """The endCursor of the previous page."""
+    after: String
+
+    """How many (1 to 100, default 50)."""
+    first: Int
+
+    """Include deleted records (they have deletedAt set)."""
+    includeDeleted: Boolean
+
+    """Only records changed at or after this time."""
+    updatedSince: DateTime
+  ): ProductConnection!
+  site: Site
+  station(id: ID!): Station
+
+  """Station records at your site, oldest change first."""
+  stations(
+    """The endCursor of the previous page."""
+    after: String
+
+    """How many (1 to 100, default 50)."""
+    first: Int
+
+    """Include deleted records (they have deletedAt set)."""
+    includeDeleted: Boolean
+
+    """Only records changed at or after this time."""
+    updatedSince: DateTime
+  ): StationConnection!
+
+  """A webhook's deliveries, newest first. Needs webhooks:write."""
+  webhookDeliveries(
+    """1 to 100, default 50."""
+    first: Int
+    status: WebhookDeliveryStatus
+    webhookId: ID!
+  ): [WebhookDelivery!]!
+
+  """This site's webhooks. Needs webhooks:write."""
+  webhooks: [Webhook!]!
+  workcenter(id: ID!): Workcenter
+
+  """Workcenter records at your site, oldest change first."""
+  workcenters(
+    """The endCursor of the previous page."""
+    after: String
+
+    """How many (1 to 100, default 50)."""
+    first: Int
+
+    """Include deleted records (they have deletedAt set)."""
+    includeDeleted: Boolean
+
+    """Only records changed at or after this time."""
+    updatedSince: DateTime
+  ): WorkcenterConnection!
+}
+
+"""If errors is not empty, the order wasn't changed."""
+type SequenceLineupPayload {
+  action: UpsertAction
+  errors: [UpsertError!]!
+
+  """The station, to read its lineup now."""
+  station: Station
+}
+
+"""The site (plant) your token belongs to."""
+type Site {
+  description: String
+  id: ID!
+  name: String!
+
+  """IANA time zone, e.g. America/Chicago."""
+  timezone: String!
+  updatedAt: DateTime!
+}
+
+"""A machine or work spot."""
+type Station {
+  archivedAt: DateTime
+  createdAt: DateTime!
+  currentJob: Job
+
+  """The job it's running now."""
+  currentJobId: ID
+  deletedAt: DateTime
+  description: String
+
+  """
+  Its ids in your own systems: the externalId you sent it with, one for each source.
+  """
+  externalIds: [ExternalId!]!
+  id: ID!
+
+  """
+  Its lineup now: the running run, then the queued runs in order, with live counts and predicted times. Null if it has no workcenter. Worked out when asked: at most 25 stations per request.
+  """
+  lineup: [LineupEntry!]
+  name: String!
+  sortOrder: Int!
+  updatedAt: DateTime!
+  workcenter: Workcenter
+  workcenterId: ID
+}
+
+type StationConnection {
+  nodes: [Station!]!
+  pageInfo: PageInfo!
+}
+
+"""What a write did."""
+enum UpsertAction {
+  """A new record was made."""
+  CREATED
+
+  """The record already matched; nothing was saved."""
+  UNCHANGED
+
+  """The record was changed."""
+  UPDATED
+}
+
+"""Something wrong with what was sent. Nothing it is about was saved."""
+type UpsertError {
+  """A short code to check for, e.g. UNKNOWN_PRODUCT."""
+  code: String!
+
+  """Which input it is about, e.g. products[2].sku."""
+  field: String
+  message: String!
+}
+
+"""
+If errors is not empty, nothing was saved: fix them and send the whole list again.
+"""
+type UpsertMaterialsPayload {
+  errors: [UpsertError!]!
+  results: [UpsertedMaterial!]!
+}
+
+"""
+If errors is not empty, the order wasn't changed (order is what it is now, if it exists).
+"""
+type UpsertOrderPayload {
+  action: UpsertAction
+  errors: [UpsertError!]!
+  order: Order
+}
+
+"""
+If a run had a problem in what was sent, nothing was saved. If the lineup's rules refused a run (errors with a code like SAME_JOB_TWICE), the runs in results were still saved.
+"""
+type UpsertProductionRunsPayload {
+  errors: [UpsertError!]!
+  results: [UpsertedProductionRun!]!
+}
+
+"""
+If errors is not empty, nothing was saved: fix them and send the whole list again.
+"""
+type UpsertProductsPayload {
+  errors: [UpsertError!]!
+  results: [UpsertedProduct!]!
+}
+
+type UpsertedMaterial {
+  action: UpsertAction!
+  externalId: String!
+  material: Material
+}
+
+type UpsertedProduct {
+  action: UpsertAction!
+  externalId: String!
+  product: Product
+}
+
+type UpsertedProductionRun {
+  action: UpsertAction!
+  externalId: String!
+  run: ProductionRun
+}
+
+"""
+Sends a signed POST to your URL when a record changes. The body is { id, type, occurredAt, siteId, data: { object, id } }: ids only, so fetch the record over /graphql.
+"""
+type Webhook {
+  createdAt: DateTime!
+  enabled: Boolean!
+  events: [WebhookEventType!]!
+  id: ID!
+  updatedAt: DateTime!
+  url: String!
+}
+
+type WebhookDelivery {
+  attempts: Int!
+  error: String
+
+  """The Rockware-Event-Id it was sent with."""
+  eventId: String
+  finishedAt: DateTime
+  id: ID!
+  nextAttemptAt: DateTime
+
+  """Your URL's HTTP status, last try."""
+  responseStatus: Int
+  startedAt: DateTime!
+  status: WebhookDeliveryStatus!
+  type: String
+}
+
+enum WebhookDeliveryStatus {
+  """It failed, and won't be sent again unless you redeliver it."""
+  FAILED
+
+  """Being sent now."""
+  PENDING
+
+  """It failed, and will be sent again at nextAttemptAt."""
+  RETRYING
+
+  """Your URL answered 2xx."""
+  SUCCEEDED
+}
+
+"""
+A kind of record change a webhook can follow. ORDER_UPDATED is sent as type "order.updated", and so on.
+"""
+enum WebhookEventType {
+  CUSTOMER_CREATED
+  CUSTOMER_DELETED
+  CUSTOMER_UPDATED
+  JOB_CREATED
+  JOB_DELETED
+  JOB_UPDATED
+  LINEUP_RUN_CREATED
+  LINEUP_RUN_UPDATED
+  MATERIAL_CREATED
+  MATERIAL_DELETED
+  MATERIAL_UPDATED
+  ORDER_CREATED
+  ORDER_DELETED
+  ORDER_UPDATED
+  PRODUCT_CREATED
+  PRODUCT_DELETED
+  PRODUCT_UPDATED
+}
+
+input WebhookInput {
+  enabled: Boolean
+  events: [WebhookEventType!]!
+
+  """An https URL on the public internet."""
+  url: String!
+}
+
+"""Only the fields you send change. events is the whole new list."""
+input WebhookUpdateInput {
+  enabled: Boolean
+  events: [WebhookEventType!]
+  url: String
+}
+
+"""
+A webhook and its signing secret. The secret is shown only here, so store it now.
+"""
+type WebhookWithSecret {
+  """
+  Check each request's Rockware-Signature header with it. See the developer guide.
+  """
+  secret: String!
+  webhook: Webhook!
+}
+
+enum WeightUnit {
+  G
+  KG
+  LB
+  OZ
+}
+
+"""
+A group of stations (a cell or line). Workcenters can sit inside other workcenters.
+"""
+type Workcenter {
+  createdAt: DateTime!
+  description: String
+
+  """
+  Its ids in your own systems: the externalId you sent it with, one for each source.
+  """
+  externalIds: [ExternalId!]!
+  id: ID!
+  name: String!
+  parentId: ID
+  updatedAt: DateTime!
+}
+
+type WorkcenterConnection {
+  nodes: [Workcenter!]!
+  pageInfo: PageInfo!
+}
