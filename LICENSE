@@ -1,0 +1,71 @@
+rw License
+
+Copyright (c) 2026 Rockware, Inc. All rights reserved.
+
+"rw" means the Rockware command line program, in any form: its binaries,
+scripts, documentation and updates. "You" means the person or organization
+using it.
+
+1. What you may do
+
+Rockware, Inc. ("Rockware") gives you a free, non-exclusive,
+non-transferable license to install and run rw, as many times and on as many
+machines as you like, to reach Rockware services you are allowed to use. You
+may use it by hand, in scripts, in CI and through AI agents, for your own
+work or your organization's. You may share rw inside your organization, as
+long as this license goes with it.
+
+2. What you may not do
+
+You may not, and may not help anyone else to:
+
+  a. reverse engineer, decompile, disassemble or otherwise try to get the
+     source code of rw, except as far as the law or Section 5 allows despite
+     this limit;
+  b. modify rw, or make works based on it;
+  c. sell, rent, lease, sublicense, publish or redistribute rw outside your
+     organization, or offer it as a service to others;
+  d. use rw to build, train, benchmark or improve a product or service that
+     competes with Rockware;
+  e. use rw to harm Rockware, its customers or its services. This includes
+     getting around access controls, scopes or rate limits, reaching data you
+     aren't allowed to see, scraping, overloading the service, or anything
+     against the terms of your Rockware agreement;
+  f. remove or change any notice of ownership or license in rw.
+
+3. Your Rockware agreement still applies
+
+rw only reaches Rockware services through your account, and your use of
+those services stays under your agreement with Rockware. If this license and
+that agreement disagree, the agreement wins.
+
+4. Ownership
+
+Rockware and its licensors own rw and all rights in it. This license gives
+you no rights except those it says. If you send Rockware ideas or feedback
+about rw, Rockware may use them freely.
+
+5. Other people's software
+
+rw includes open source software from others, listed in
+THIRD_PARTY_NOTICES. Those parts are under their own licenses, and nothing
+in this license limits the rights those licenses give you.
+
+6. Ending
+
+This license ends at once if you break it, or when Rockware tells you it has
+ended. When it ends, stop using rw and delete your copies. Sections 2, 4, 7
+and 8 keep applying after it ends.
+
+7. No warranty
+
+RW IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+AND NON-INFRINGEMENT.
+
+8. Limit of liability
+
+AS FAR AS THE LAW ALLOWS, ROCKWARE WILL NOT BE LIABLE FOR ANY INDIRECT,
+INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, OR FOR LOST PROFITS,
+DATA OR BUSINESS, ARISING FROM RW OR ITS USE, EVEN IF TOLD THEY WERE
+POSSIBLE. ROCKWARE'S TOTAL LIABILITY FOR RW WILL NOT BE MORE THAN US $100.
