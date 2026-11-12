@@ -168,7 +168,7 @@ export function webhooksCommand(io: () => IO): Command {
     .action(
       action<{ yes?: boolean }>(io, async (ctx, [id], options) => {
         if (!options.yes) {
-          if (!ctx.interactive) throw new RwError("usage", "Deleting needs --yes when rw can't ask you");
+          if (!ctx.interactive) throw new RwError("usage", "Deleting needs --yes when the Rockware CLI can't ask you");
           if (!(await ctx.confirm(`Delete webhook ${id}?`))) throw new RwError("cancelled", "Nothing was deleted");
         }
         const { deleteWebhook } = await ctx.api().request<{ deleteWebhook: boolean }>(DELETE_WEBHOOK, { id });

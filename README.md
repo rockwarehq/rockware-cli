@@ -1,6 +1,6 @@
-# rw
+# Rockware CLI
 
-Rockware on the command line. Read your plant's records, send records in from your own systems, and manage webhooks, from a terminal, a script or an AI agent.
+Rockware on the command line. The command is `rw`. Read your plant's records, send records in from your own systems, and manage webhooks, from a terminal, a script or an AI agent.
 
 ```sh
 rw auth login --host acme        # sign in through your browser
@@ -28,7 +28,7 @@ From source: `pnpm install`, then `pnpm dev -- <command>`, or build one file wit
 rw auth login --host <your tenant>
 ```
 
-This opens your browser. You approve rw for one plant on Rockware's consent page, and rw saves the sign-in in your keychain. The plant must allow agent connections: a plant admin turns them on in IMM under Settings → Connect an agent.
+This opens your browser. You approve the Rockware CLI for one plant on Rockware's consent page, and it saves the sign-in in your keychain. The plant must allow agent connections: a plant admin turns them on in IMM under Settings → Connect an agent.
 
 - `--scope write` asks to send records in and change webhooks too. Only a plant admin can give that.
 - `--no-browser` prints the link instead of opening it.
@@ -69,7 +69,7 @@ Upserts read a JSON file, `-` for stdin, or `--data '<json>'`. Records are match
 
 ## For scripts and agents
 
-When its output is piped, or with `--json`, rw answers with one JSON envelope:
+When its output is piped, or with `--json`, the Rockware CLI answers with one JSON envelope:
 
 ```json
 { "ok": true, "data": [...], "summary": "12 stations", "breadcrumbs": [{ "action": "Show one station", "cmd": "rw stations show …" }] }
@@ -109,12 +109,12 @@ How it works inside: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## License
 
-rw isn't open source. It's under the Rockware CLI license in [LICENSE](./LICENSE). This is a short summary. Where they differ, LICENSE is what counts.
+The Rockware CLI isn't open source. It's under the Rockware CLI license in [LICENSE](./LICENSE). This is a short summary. Where they differ, LICENSE is what counts.
 
-- **Using rw for real work** needs a paid Rockware subscription. You must also agree to and follow the [Rockware Terms of Service](https://rockwarecorp.com/terms), or another agreement you have with Rockware.
-- **Developing and testing:** you may copy and change rw for this without a subscription.
-- **Patches:** you may change rw and publish patches. Rockware owns every change and patch, and they may only be used with a paid subscription.
-- **You may not** copy, publish, share, sublicense or sell rw beyond what's above. You may not use it to harm Rockware, or reverse engineer its binaries, unless the law or a third-party license allows it.
-- **No warranty:** rw comes as is.
+- **Using it for real work** needs a paid Rockware subscription. You must also agree to and follow the [Rockware Terms of Service](https://rockwarecorp.com/terms), or another agreement you have with Rockware.
+- **Developing and testing:** you may copy and change it for this without a subscription.
+- **Patches:** you may change it and publish patches. Rockware owns every change and patch, and they may only be used with a paid subscription.
+- **You may not** copy, publish, share, sublicense or sell it beyond what's above. You may not use it to harm Rockware, or reverse engineer its binaries, unless the law or a third-party license allows it.
+- **No warranty:** it comes as is.
 
-rw includes open source software, such as the Bun runtime, each part under its own license. They're listed in [THIRD_PARTY_NOTICES](./THIRD_PARTY_NOTICES). Nothing in LICENSE limits your rights under them.
+The Rockware CLI includes open source software, such as the Bun runtime, each part under its own license. They're listed in [THIRD_PARTY_NOTICES](./THIRD_PARTY_NOTICES). Nothing in LICENSE limits your rights under them.

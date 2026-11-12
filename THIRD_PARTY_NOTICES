@@ -1,6 +1,6 @@
-Third-party notices for rw
+Third-party notices for the Rockware CLI
 
-rw is under the Rockware CLI license (see LICENSE). It includes the open source
+The Rockware CLI is under the Rockware CLI license (see LICENSE). It includes the open source
 software below, each under its own license. Nothing in the Rockware CLI license limits
 your rights under these licenses.
 
@@ -8,7 +8,7 @@ your rights under these licenses.
 Bun
 https://bun.sh
 
-Each rw binary is built with `bun build --compile`, so it contains the Bun
+Each Rockware CLI binary is built with `bun build --compile`, so it contains the Bun
 runtime. Bun itself is MIT-licensed. It statically links JavaScriptCore and
 parts of WebKit, which are under the GNU LGPL version 2, and other libraries
 under MIT, BSD, Apache 2.0, zlib and similar licenses. The full list, and how
@@ -18,7 +18,7 @@ in Bun's license:
   https://github.com/oven-sh/bun/blob/main/LICENSE.md
 
 Under the LGPL you may modify those libraries and relink, and reverse
-engineer rw as far as needed to debug such changes.
+engineer the Rockware CLI as far as needed to debug such changes.
 
 Bun is MIT-licensed:
 

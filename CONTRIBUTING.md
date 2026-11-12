@@ -1,13 +1,14 @@
-# Contributing to rw
+# Contributing to the Rockware CLI
 
 Patches and helpful contributions are welcome: bug fixes, clearer help and
 errors, docs, and commands for what the developer API already does.
 
 ## Before you start
 
-- rw isn't open source. Read [LICENSE](./LICENSE). You may copy and change rw
-  to develop and test a patch without a Rockware subscription. Rockware owns
-  every change and patch, and they can only be used with a paid subscription.
+- The Rockware CLI isn't open source. Read [LICENSE](./LICENSE). You may copy
+  and change it to develop and test a patch without a Rockware subscription.
+  Rockware owns every change and patch, and they can only be used with a paid
+  subscription.
 - By opening a pull request, you agree that what you send is yours to give,
   and that Rockware owns it under the license.
 - For anything bigger than a small fix, open an issue first, so we can agree
@@ -15,14 +16,14 @@ errors, docs, and commands for what the developer API already does.
 - Found a security problem? Don't open an issue. Email
   support@rockwarecorp.com, with "Security" in the subject.
 
-## Working on rw
+## Working on the Rockware CLI
 
 You need Node 24 and pnpm. [Bun](https://bun.sh) is only needed to build the
 single-file binary.
 
 ```sh
 pnpm install
-pnpm dev -- --help          # run rw from source
+pnpm dev -- --help          # run it from source
 pnpm test                   # no server or network needed
 pnpm typecheck
 pnpm lint
@@ -31,17 +32,17 @@ pnpm lint
 To try a change against a real Rockware host, sign in as usual:
 `pnpm dev -- auth login --host <your tenant>`.
 
-How rw is put together is in [ARCHITECTURE.md](./ARCHITECTURE.md).
+How the Rockware CLI is put together is in [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-## Rules that keep rw safe to depend on
+## Rules that keep the Rockware CLI safe to depend on
 
 - **Answers are a contract.** The JSON envelope, the error codes and the exit
   codes (`src/errors.ts`) only grow. Add a code; never change one.
 - **Every command and flag is listed in `surface.txt`.** The tests fail when
   it changes, so a change to it is always on purpose. Update it in the same
   pull request.
-- **rw adds no rules of its own.** The API decides what's allowed, and rw
-  passes its answer on. rw never matches records by name.
+- **The Rockware CLI adds no rules of its own.** The API decides what's
+  allowed, and the CLI passes its answer on. It never matches records by name.
 - **Secrets only on stdin** or in the keychain, never as arguments, and never
   in output except the one time a new webhook secret is shown.
 - **Every query is checked against `schema/developer-api.graphql`.** If a
