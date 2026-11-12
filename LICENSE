@@ -4,56 +4,34 @@ Copyright (c) 2026 Rockware Corp.
 With regard to the Rockware CLI (rw):
 
 This software and associated documentation files (the "Software") may only be
-used if you (and any entity that you represent) have agreed to, and are in
-compliance with, the Rockware Terms of Service, available at
+used in production, if you (and any entity that you represent) have agreed to,
+and are in compliance with, the Rockware Terms of Service, available at
 https://rockwarecorp.com/terms (the "Rockware Terms"), or other agreement
-governing your use of Rockware's services, as agreed by you and Rockware Corp.
-("Rockware"). Subject to the foregoing sentence, you may install and run the
-Software, on any number of machines, to access the Rockware services you are
-permitted to use, including from your own scripts, continuous integration and
-AI agents, and you may copy the Software within your organization for that
-purpose, provided this License accompanies every copy.
-
-You may not, and may not allow or help anyone else to:
-
-  (a) reverse engineer, decompile, disassemble or otherwise attempt to derive
-      the source code of the Software, except to the extent that applicable
-      law or a third-party license described below expressly permits it;
-  (b) modify the Software or create derivative works of it;
-  (c) use the Software to build, train, benchmark or improve a product or
-      service that competes with Rockware;
-  (d) use the Software to harm Rockware, its customers or its services,
-      including by circumventing access controls, scopes or rate limits,
-      accessing data you are not permitted to access, scraping, placing an
-      unreasonable load on Rockware's services, or otherwise acting against
-      the Rockware Terms; or
-  (e) remove or alter any notice of ownership or license in the Software.
-
-Rockware and/or its licensors (as applicable) retain all right, title and
-interest in and to the Software. If you give Rockware feedback or suggestions
-about the Software, Rockware may use them without restriction. You are not
-granted any other rights beyond what is expressly stated herein. Subject to the
-foregoing, it is forbidden to copy, merge, publish, distribute, sublicense,
-rent, lease and/or sell the Software, or to offer it as a service to others.
-
-This License ends automatically if you fail to comply with it, or when
-Rockware notifies you that it has ended. When it ends, you must stop using the
-Software and delete all copies of it. The restrictions above and the
-paragraphs below survive the end of this License.
+governing the use of the Software, as agreed by you and Rockware Corp.
+("Rockware"), and otherwise have a valid, paid Rockware subscription. Subject
+to the foregoing sentence, you are free to modify this Software and publish
+patches to the Software. You agree that Rockware and/or its licensors (as
+applicable) retain all right, title and interest in and to all such
+modifications and/or patches, and all such modifications and/or patches may
+only be used, copied, modified, displayed, distributed, or otherwise exploited
+with a valid, paid Rockware subscription. Notwithstanding the foregoing, you
+may copy and modify the Software for development and testing purposes,
+without requiring a subscription. You agree that Rockware and/or its licensors
+(as applicable) retain all right, title and interest in and to all such
+modifications. You may not use the Software to compete with or harm Rockware,
+or reverse engineer its compiled binaries, except as applicable law or the
+third party licenses below allow. You are not granted any other rights beyond
+what is expressly stated herein. Subject to the foregoing, it is forbidden to
+copy, merge, publish, distribute, sublicense, and/or sell the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-ROCKWARE OR ITS LICENSORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-This License is governed by the laws of the State of Ohio, as the Rockware
-Terms are. If this License and the Rockware Terms, or your other agreement
-with Rockware, conflict, that agreement controls.
-
-For all third party components incorporated into the Software, those
-components are licensed under the original license provided by the owner of
-the applicable component, as listed in THIRD_PARTY_NOTICES. Nothing in this
-License limits the rights those licenses give you.
+For all third party components incorporated into the Rockware Software, those
+components are licensed under the original license provided by the owner of the
+applicable component, as listed in THIRD_PARTY_NOTICES.
