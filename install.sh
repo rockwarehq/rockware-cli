@@ -73,6 +73,24 @@ chmod 755 "$BIN_DIR/rw"
 say "Installed rw $version to $BIN_DIR/rw"
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
-  *) say "Add it to your PATH: export PATH=\"$BIN_DIR:\$PATH\"" ;;
+  *)
+    # Name the file this person's shell reads, so the line can be pasted as is.
+    case "${SHELL##*/}" in
+      zsh) rc="${ZDOTDIR:-$HOME}/.zshrc" ;;
+      bash) if [ "$os" = darwin ]; then rc="$HOME/.bash_profile"; else rc="$HOME/.bashrc"; fi ;;
+      fish) rc="" ;;
+      *) rc="$HOME/.profile" ;;
+    esac
+    say ""
+    say "$BIN_DIR isn't on your PATH yet, so your shell can't find rw. To add it, run:"
+    say ""
+    if [ -z "$rc" ]; then
+      say "  fish_add_path \"$BIN_DIR\""
+    else
+      say "  echo 'export PATH=\"$BIN_DIR:\$PATH\"' >> \"$rc\""
+    fi
+    say ""
+    say "Then open a new terminal."
+    ;;
 esac
 say "Next: rw auth login --host <your tenant>"
