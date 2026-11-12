@@ -109,4 +109,12 @@ How it works inside: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## License
 
-rw comes with a paid Rockware subscription, under the [Rockware Terms of Service](https://rockwarecorp.com/terms). It isn't open source. With a subscription you may install and run it anywhere, in scripts, CI and agents too. You may change it and send patches, and anyone may build and test changes without a subscription; Rockware owns the changes. You may not take apart its binaries, pass it on, or use it to harm Rockware. See [LICENSE](./LICENSE). The open source parts it includes are in [THIRD_PARTY_NOTICES](./THIRD_PARTY_NOTICES).
+rw isn't open source. It's under the Rockware CLI license in [LICENSE](./LICENSE). This is a short summary. Where they differ, LICENSE is what counts.
+
+- **Using rw for real work** needs a paid Rockware subscription. You must also agree to and follow the [Rockware Terms of Service](https://rockwarecorp.com/terms), or another agreement you have with Rockware.
+- **Developing and testing:** you may copy and change rw for this without a subscription.
+- **Patches:** you may change rw and publish patches. Rockware owns every change and patch, and they may only be used with a paid subscription.
+- **You may not** copy, publish, share, sublicense or sell rw beyond what's above. You may not use it to harm Rockware, or reverse engineer its binaries, unless the law or a third-party license allows it.
+- **No warranty:** rw comes as is.
+
+rw includes open source software, such as the Bun runtime, each part under its own license. They're listed in [THIRD_PARTY_NOTICES](./THIRD_PARTY_NOTICES). Nothing in LICENSE limits your rights under them.
