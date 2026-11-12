@@ -26,6 +26,10 @@ rw workcenters list --updated-since <time>
 rw workcenters list --include-deleted
 rw workcenters show
 rw workcenters show <id>
+rw workcenters upsert
+rw workcenters upsert [file]
+rw workcenters upsert --data <json>
+rw workcenters upsert --source <name>
 rw stations list
 rw stations list --limit <n>
 rw stations list --all
@@ -34,6 +38,10 @@ rw stations list --updated-since <time>
 rw stations list --include-deleted
 rw stations show
 rw stations show <id>
+rw stations upsert
+rw stations upsert [file]
+rw stations upsert --data <json>
+rw stations upsert --source <name>
 rw jobs list
 rw jobs list --limit <n>
 rw jobs list --all
@@ -42,6 +50,22 @@ rw jobs list --updated-since <time>
 rw jobs list --include-deleted
 rw jobs show
 rw jobs show <id>
+rw jobs upsert
+rw jobs upsert [file]
+rw jobs upsert --data <json>
+rw jobs upsert --source <name>
+rw tools list
+rw tools list --limit <n>
+rw tools list --all
+rw tools list --after <cursor>
+rw tools list --updated-since <time>
+rw tools list --include-deleted
+rw tools show
+rw tools show <id>
+rw tools upsert
+rw tools upsert [file]
+rw tools upsert --data <json>
+rw tools upsert --source <name>
 rw products list
 rw products list --limit <n>
 rw products list --all
@@ -74,6 +98,10 @@ rw customers list --updated-since <time>
 rw customers list --include-deleted
 rw customers show
 rw customers show <id>
+rw customers upsert
+rw customers upsert [file]
+rw customers upsert --data <json>
+rw customers upsert --source <name>
 rw orders list
 rw orders list --limit <n>
 rw orders list --all
@@ -86,6 +114,44 @@ rw orders upsert
 rw orders upsert [file]
 rw orders upsert --data <json>
 rw orders upsert --source <name>
+rw production-runs list
+rw production-runs list --limit <n>
+rw production-runs list --all
+rw production-runs list --after <cursor>
+rw production-runs list --updated-since <time>
+rw production-runs list --include-deleted
+rw production-runs show
+rw production-runs show <id>
+rw production-runs upsert
+rw production-runs upsert [file]
+rw production-runs upsert --data <json>
+rw production-runs upsert --source <name>
+rw lineup show
+rw lineup show <station-id>
+rw lineup sequence
+rw lineup sequence <station>
+rw lineup sequence <runs>
+rw lineup sequence --source <name>
+rw entities list
+rw entities show
+rw entities show <key>
+rw entities upsert
+rw entities upsert [file]
+rw entities upsert --data <json>
+rw entity-records list
+rw entity-records list <model>
+rw entity-records list --limit <n>
+rw entity-records list --all
+rw entity-records list --after <cursor>
+rw entity-records list --updated-since <time>
+rw entity-records list --include-deleted
+rw entity-records show
+rw entity-records show <id>
+rw entity-records upsert
+rw entity-records upsert <model>
+rw entity-records upsert [file]
+rw entity-records upsert --data <json>
+rw entity-records upsert --source <name>
 rw webhooks list
 rw webhooks events
 rw webhooks create

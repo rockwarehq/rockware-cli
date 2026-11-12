@@ -1,5 +1,5 @@
 import { Command, InvalidArgumentError } from "commander";
-import { listQuery, RECORD_KINDS, type RecordKind, SITE, showQuery } from "../api/queries.js";
+import { groupOf, listQuery, RECORD_KINDS, type RecordKind, SITE, showQuery } from "../api/queries.js";
 import { action, type Context, type IO } from "../context.js";
 import { RwError } from "../errors.js";
 import { fields, table } from "../format.js";
@@ -12,7 +12,7 @@ import type { Breadcrumb, Result } from "../output.js";
 const PAGE_SIZE = 100;
 const DEFAULT_LIMIT = 50;
 
-interface ListOptions {
+export interface ListOptions {
   limit?: number;
   all?: boolean;
   after?: string;
@@ -23,6 +23,48 @@ interface ListOptions {
 interface Page {
   nodes: Array<Record<string, any>>;
   pageInfo: { endCursor: string | null; hasNextPage: boolean };
+}
+
+/**
+ * Read pages of one list until there are `limit` rows or no more. `field` is
+ * the query's root field. Shared by every list command.
+ */
+export async function readPages(
+  ctx: Context,
+  query: string,
+  field: string,
+  variables: Record<string, unknown>,
+  options: ListOptions,
+): Promise<{ rows: Array<Record<string, any>>; after: string | null; more: boolean }> {
+  if (options.all && options.limit) throw new RwError("usage", "Use --all or --limit, not both");
+  const limit = options.all ? Number.POSITIVE_INFINITY : (options.limit ?? DEFAULT_LIMIT);
+  const rows: Array<Record<string, any>> = [];
+  let after = options.after ?? null;
+  let more = true;
+  while (more && rows.length < limit) {
+    const result = await ctx.api().request<Record<string, Page>>(query, {
+      ...variables,
+      first: Math.min(PAGE_SIZE, limit - rows.length),
+      after,
+      updatedSince: options.updatedSince ?? null,
+      includeDeleted: options.includeDeleted ?? false,
+    });
+    const page = result[field] as Page;
+    rows.push(...page.nodes);
+    after = page.pageInfo.endCursor;
+    more = page.pageInfo.hasNextPage;
+  }
+  return { rows, after, more };
+}
+
+/** The flags every list takes. */
+export function listOptions(command: Command): Command {
+  return command
+    .option("--limit <n>", `How many at most (default ${DEFAULT_LIMIT})`, positiveInt)
+    .option("--all", "Every one, page after page")
+    .option("--after <cursor>", "Start after this cursor, from a page before")
+    .option("--updated-since <time>", "Only ones changed since then", isoTime)
+    .option("--include-deleted", "Include deleted ones");
 }
 
 export function positiveInt(value: string): number {
@@ -38,33 +80,20 @@ function isoTime(value: string): string {
   return date.toISOString();
 }
 
-async function list(ctx: Context, kind: RecordKind, options: ListOptions): Promise<Result<any>> {
-  if (options.all && options.limit) throw new RwError("usage", "Use --all or --limit, not both");
-  const limit = options.all ? Number.POSITIVE_INFINITY : (options.limit ?? DEFAULT_LIMIT);
-  const query = listQuery(kind);
-  const rows: Array<Record<string, any>> = [];
-  let after = options.after ?? null;
-  let more = true;
-  while (more && rows.length < limit) {
-    const result = await ctx.api().request<Record<string, Page>>(query, {
-      first: Math.min(PAGE_SIZE, limit - rows.length),
-      after,
-      updatedSince: options.updatedSince ?? null,
-      includeDeleted: options.includeDeleted ?? false,
-    });
-    const page = result[kind.plural] as Page;
-    rows.push(...page.nodes);
-    after = page.pageInfo.endCursor;
-    more = page.pageInfo.hasNextPage;
-  }
+/** A kind's name in words: "production run", "production runs". */
+const many = (kind: RecordKind) => groupOf(kind).replace(/-/g, " ");
+const one = (kind: RecordKind) => kind.singular.replace(/[A-Z]/g, (c) => ` ${c.toLowerCase()}`);
 
+async function list(ctx: Context, kind: RecordKind, options: ListOptions): Promise<Result<any>> {
+  const { rows, after, more } = await readPages(ctx, listQuery(kind), kind.plural, {}, options);
+  const group = groupOf(kind);
   const breadcrumbs: Breadcrumb[] = [];
   const first = rows[0];
-  if (first) breadcrumbs.push({ action: `Show one ${kind.singular}`, cmd: `rw ${kind.plural} show ${first.id}` });
+  if (first) breadcrumbs.push({ action: `Show one ${one(kind)}`, cmd: `rw ${group} show ${first.id}` });
   // The cursor works later too: pass it to get what changed since this page.
-  if (more && after) breadcrumbs.push({ action: "Get the next page", cmd: `rw ${kind.plural} list --after ${after}` });
+  if (more && after) breadcrumbs.push({ action: "Get the next page", cmd: `rw ${group} list --after ${after}` });
 
-  const word = rows.length === 1 ? kind.singular : kind.plural;
+  const word = rows.length === 1 ? one(kind) : many(kind);
   return {
     data: rows,
     summary: `${rows.length} ${word}${more ? ", and more" : ""}`,
@@ -82,35 +111,29 @@ async function show(ctx: Context, kind: RecordKind, id: string): Promise<Result<
   const result = await ctx.api().request<Record<string, Record<string, any> | null>>(showQuery(kind), { id });
   const record = result[kind.singular];
   if (!record) {
-    throw new RwError("not_found", `No ${kind.singular} with id ${id} at this plant`, {
-      hint: `Find its id: rw ${kind.plural} list`,
+    throw new RwError("not_found", `No ${one(kind)} with id ${id} at this plant`, {
+      hint: `Find its id: rw ${groupOf(kind)} list`,
     });
   }
   return {
     data: record,
-    summary: `${kind.singular} ${record.name ?? record.orderNumber ?? record.sku ?? record.id}`,
+    summary: `${one(kind)} ${record.name ?? record.orderNumber ?? record.sku ?? record.id}`,
     breadcrumbs: kind.next?.(record) ?? [],
     human: (data) => fields(data, ctx.style),
   };
 }
 
 function recordCommand(io: () => IO, kind: RecordKind): Command {
-  const group = new Command(kind.plural).description(kind.description);
+  const group = new Command(groupOf(kind)).description(kind.description);
 
-  group
-    .command("list")
-    .description(`List ${kind.plural}`)
-    .option("--limit <n>", `How many at most (default ${DEFAULT_LIMIT})`, positiveInt)
-    .option("--all", "Every one, page after page")
-    .option("--after <cursor>", "Start after this cursor, from a page before")
-    .option("--updated-since <time>", "Only ones changed since then", isoTime)
-    .option("--include-deleted", "Include deleted ones")
-    .action(action<ListOptions>(io, (ctx, _args, options) => list(ctx, kind, options)));
+  listOptions(group.command("list").description(`List ${many(kind)}`)).action(
+    action<ListOptions>(io, (ctx, _args, options) => list(ctx, kind, options)),
+  );
 
   group
     .command("show")
-    .description(`Show one ${kind.singular}`)
-    .argument("<id>", `The ${kind.singular}'s Rockware id`)
+    .description(`Show one ${one(kind)}`)
+    .argument("<id>", `The ${one(kind)}'s Rockware id`)
     .action(action(io, (ctx, [id]) => show(ctx, kind, id as string)));
 
   return group;

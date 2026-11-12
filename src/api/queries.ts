@@ -9,8 +9,10 @@ const EXTERNAL_IDS = "externalIds { id source }";
  * `rw <plural> list` and `rw <plural> show <id>`.
  */
 export interface RecordKind {
-  /** The command group and the query for many: `stations`. */
+  /** The query for many, and the command group unless `command` says otherwise: `stations`. */
   plural: string;
+  /** The command group, when it isn't `plural`: `production-runs`. */
+  command?: string;
   /** The query for one: `station`. */
   singular: string;
   /** What `list` and `show` ask for. */
@@ -63,14 +65,27 @@ export const RECORD_KINDS: RecordKind[] = [
     singular: "job",
     description: "What stations run, with their standards",
     fields:
-      "id name description version standardRate standardRateUnit standardCycle productsPerCycle standardQuantity " +
-      "archivedAt createdAt updatedAt deletedAt",
+      "id name description version standardRate standardRateUnit standardRatePeriod standardCycle productsPerCycle " +
+      `standardQuantity profileId archivedAt createdAt updatedAt deletedAt ${EXTERNAL_IDS} ` +
+      "tools { id name } items { id quantity isActive cavityId product { id sku } tool { id name } }",
     columns: [
       ["id", "ID"],
       ["name", "NAME"],
       ["standardRate", "RATE"],
       ["standardRateUnit", "UNIT"],
       ["version", "VERSION"],
+    ],
+  },
+  {
+    plural: "tools",
+    singular: "tool",
+    description: "Molds, dies and other tools, with their cavities",
+    fields: `id name description version cavityCount cavities { id name position } archivedAt createdAt updatedAt deletedAt ${EXTERNAL_IDS}`,
+    columns: [
+      ["id", "ID"],
+      ["name", "NAME"],
+      ["cavityCount", "CAVITIES"],
+      ["externalIds", "OUTSIDE IDS"],
     ],
   },
   {
@@ -128,7 +143,31 @@ export const RECORD_KINDS: RecordKind[] = [
     next: (order) =>
       order.customerId ? [{ action: "Show the customer", cmd: `rw customers show ${order.customerId}` }] : [],
   },
+  {
+    plural: "productionRuns",
+    singular: "productionRun",
+    command: "production-runs",
+    description: "Runs on stations' lineups: one job at one station",
+    fields:
+      "id status rank stationId jobId startBy endBy plannedStart plannedEnd runStartedAt closedAt " +
+      `closeReason createdAt updatedAt ${EXTERNAL_IDS} station { id name } job { id name } ` +
+      "parts { requiredGood product { id sku } }",
+    columns: [
+      ["id", "ID"],
+      ["status", "STATUS"],
+      ["station", "STATION"],
+      ["job", "JOB"],
+      ["externalIds", "OUTSIDE IDS"],
+    ],
+    next: (run) => [
+      { action: "Show the station's lineup", cmd: `rw lineup show ${run.stationId}` },
+      { action: "Show the job", cmd: `rw jobs show ${run.jobId}` },
+    ],
+  },
 ];
+
+/** A kind's command group: `rw <group> list`. */
+export const groupOf = (kind: RecordKind): string => kind.command ?? kind.plural;
 
 export function listQuery(kind: RecordKind): string {
   return (
@@ -154,6 +193,63 @@ export const UPSERT_PRODUCTS =
   "mutation UpsertProducts($source: String, $products: [ProductInput!]!) { " +
   `upsertProducts(source: $source, products: $products) { results { action externalId product { id sku name } } ${UPSERT_ERRORS} } }`;
 
+export const UPSERT_WORKCENTERS =
+  "mutation UpsertWorkcenters($source: String, $workcenters: [WorkcenterInput!]!) { " +
+  `upsertWorkcenters(source: $source, workcenters: $workcenters) { results { action externalId workcenter { id name } } ${UPSERT_ERRORS} } }`;
+
+export const UPSERT_STATIONS =
+  "mutation UpsertStations($source: String, $stations: [StationInput!]!) { " +
+  `upsertStations(source: $source, stations: $stations) { results { action externalId station { id name } } ${UPSERT_ERRORS} } }`;
+
+export const UPSERT_TOOLS =
+  "mutation UpsertTools($source: String, $tools: [ToolInput!]!) { " +
+  `upsertTools(source: $source, tools: $tools) { results { action externalId tool { id name } } ${UPSERT_ERRORS} } }`;
+
+export const UPSERT_JOBS =
+  "mutation UpsertJobs($source: String, $jobs: [JobInput!]!) { " +
+  `upsertJobs(source: $source, jobs: $jobs) { results { action externalId job { id name } } ${UPSERT_ERRORS} } }`;
+
+export const UPSERT_CUSTOMERS =
+  "mutation UpsertCustomers($source: String, $customers: [CustomerUpsertInput!]!) { " +
+  `upsertCustomers(source: $source, customers: $customers) { results { action externalId customer { id name } } ${UPSERT_ERRORS} } }`;
+
+export const UPSERT_PRODUCTION_RUNS =
+  "mutation UpsertProductionRuns($source: String, $runs: [ProductionRunInput!]!) { " +
+  `upsertProductionRuns(source: $source, runs: $runs) { results { action externalId run { id status stationId station { name } job { name } } } ${UPSERT_ERRORS} } }`;
+
+export const SEQUENCE_LINEUP =
+  "mutation SequenceLineup($source: String, $station: String!, $runs: [String!]!) { " +
+  `sequenceLineup(source: $source, station: $station, runs: $runs) { action station { id name } ${UPSERT_ERRORS} } }`;
+
+export const STATION_LINEUP =
+  "query StationLineup($id: ID!) { station(id: $id) { id name lineup { position predictedStart predictedEnd " +
+  `startByAtRisk endByAtRisk run { id status ${EXTERNAL_IDS} job { id name } } } } }`;
+
+// Custom entities: the plant's own kinds of record, in one general shape.
+const ENTITY_MODEL_FIELDS =
+  "id key label description version createdAt updatedAt " +
+  "fields { key label description type isList required refModel options { value label } }";
+const ENTITY_RECORD_FIELDS = `id model name values deleted createdAt updatedAt ${EXTERNAL_IDS}`;
+
+export const ENTITY_MODELS = `query EntityModels { entityModels { ${ENTITY_MODEL_FIELDS} } }`;
+
+export const ENTITY_MODEL = `query EntityModel($key: String!) { entityModel(key: $key) { ${ENTITY_MODEL_FIELDS} } }`;
+
+export const ENTITY_RECORDS =
+  "query EntityRecords($model: String!, $first: Int, $after: String, $updatedSince: DateTime, $includeDeleted: Boolean) { " +
+  "entityRecords(model: $model, first: $first, after: $after, updatedSince: $updatedSince, includeDeleted: $includeDeleted) " +
+  `{ nodes { ${ENTITY_RECORD_FIELDS} } pageInfo { endCursor hasNextPage } } }`;
+
+export const ENTITY_RECORD = `query EntityRecord($id: ID!) { entityRecord(id: $id) { ${ENTITY_RECORD_FIELDS} } }`;
+
+export const UPSERT_ENTITY_MODELS =
+  "mutation UpsertEntityModels($models: [EntityModelInput!]!) { " +
+  `upsertEntityModels(models: $models) { results { action key model { id label version } } ${UPSERT_ERRORS} } }`;
+
+export const UPSERT_ENTITY_RECORDS =
+  "mutation UpsertEntityRecords($source: String, $model: String!, $records: [EntityRecordInput!]!) { " +
+  `upsertEntityRecords(source: $source, model: $model, records: $records) { results { action externalId record { id name } } ${UPSERT_ERRORS} } }`;
+
 export const UPSERT_ORDER =
   "mutation UpsertOrder($source: String, $order: OrderInput!) { " +
   `upsertOrder(source: $source, order: $order) { action order { id orderNumber status } ${UPSERT_ERRORS} } }`;
@@ -177,8 +273,7 @@ export const UPDATE_WEBHOOK =
 
 export const DELETE_WEBHOOK = "mutation DeleteWebhook($id: ID!) { deleteWebhook(id: $id) }";
 
-export const ROTATE_WEBHOOK_SECRET =
-  "mutation RotateWebhookSecret($id: ID!) { " + `rotateWebhookSecret(id: $id) { secret webhook { ${WEBHOOK} } } }`;
+export const ROTATE_WEBHOOK_SECRET = `mutation RotateWebhookSecret($id: ID!) { rotateWebhookSecret(id: $id) { secret webhook { ${WEBHOOK} } } }`;
 
 export const SEND_TEST_WEBHOOK = `mutation SendTestWebhook($id: ID!) { sendTestWebhook(id: $id) { ${DELIVERY} } }`;
 
@@ -213,6 +308,20 @@ export const ALL_OPERATIONS: Record<string, string> = {
   UPSERT_MATERIALS,
   UPSERT_PRODUCTS,
   UPSERT_ORDER,
+  UPSERT_WORKCENTERS,
+  UPSERT_STATIONS,
+  UPSERT_TOOLS,
+  UPSERT_JOBS,
+  UPSERT_CUSTOMERS,
+  UPSERT_PRODUCTION_RUNS,
+  SEQUENCE_LINEUP,
+  STATION_LINEUP,
+  ENTITY_MODELS,
+  ENTITY_MODEL,
+  ENTITY_RECORDS,
+  ENTITY_RECORD,
+  UPSERT_ENTITY_MODELS,
+  UPSERT_ENTITY_RECORDS,
   WEBHOOKS,
   WEBHOOK_DELIVERIES,
   CREATE_WEBHOOK,
