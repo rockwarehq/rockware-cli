@@ -1,71 +1,59 @@
-rw License
+The Rockware CLI license (the "License")
+Copyright (c) 2026 Rockware Corp.
 
-Copyright (c) 2026 Rockware, Inc. All rights reserved.
+With regard to the Rockware CLI (rw):
 
-"rw" means the Rockware command line program, in any form: its binaries,
-scripts, documentation and updates. "You" means the person or organization
-using it.
+This software and associated documentation files (the "Software") may only be
+used if you (and any entity that you represent) have agreed to, and are in
+compliance with, the Rockware Terms of Service, available at
+https://rockwarecorp.com/terms (the "Rockware Terms"), or other agreement
+governing your use of Rockware's services, as agreed by you and Rockware Corp.
+("Rockware"). Subject to the foregoing sentence, you may install and run the
+Software, on any number of machines, to access the Rockware services you are
+permitted to use, including from your own scripts, continuous integration and
+AI agents, and you may copy the Software within your organization for that
+purpose, provided this License accompanies every copy.
 
-1. What you may do
+You may not, and may not allow or help anyone else to:
 
-Rockware, Inc. ("Rockware") gives you a free, non-exclusive,
-non-transferable license to install and run rw, as many times and on as many
-machines as you like, to reach Rockware services you are allowed to use. You
-may use it by hand, in scripts, in CI and through AI agents, for your own
-work or your organization's. You may share rw inside your organization, as
-long as this license goes with it.
+  (a) reverse engineer, decompile, disassemble or otherwise attempt to derive
+      the source code of the Software, except to the extent that applicable
+      law or a third-party license described below expressly permits it;
+  (b) modify the Software or create derivative works of it;
+  (c) use the Software to build, train, benchmark or improve a product or
+      service that competes with Rockware;
+  (d) use the Software to harm Rockware, its customers or its services,
+      including by circumventing access controls, scopes or rate limits,
+      accessing data you are not permitted to access, scraping, placing an
+      unreasonable load on Rockware's services, or otherwise acting against
+      the Rockware Terms; or
+  (e) remove or alter any notice of ownership or license in the Software.
 
-2. What you may not do
+Rockware and/or its licensors (as applicable) retain all right, title and
+interest in and to the Software. If you give Rockware feedback or suggestions
+about the Software, Rockware may use them without restriction. You are not
+granted any other rights beyond what is expressly stated herein. Subject to the
+foregoing, it is forbidden to copy, merge, publish, distribute, sublicense,
+rent, lease and/or sell the Software, or to offer it as a service to others.
 
-You may not, and may not help anyone else to:
+This License ends automatically if you fail to comply with it, or when
+Rockware notifies you that it has ended. When it ends, you must stop using the
+Software and delete all copies of it. The restrictions above and the
+paragraphs below survive the end of this License.
 
-  a. reverse engineer, decompile, disassemble or otherwise try to get the
-     source code of rw, except as far as the law or Section 5 allows despite
-     this limit;
-  b. modify rw, or make works based on it;
-  c. sell, rent, lease, sublicense, publish or redistribute rw outside your
-     organization, or offer it as a service to others;
-  d. use rw to build, train, benchmark or improve a product or service that
-     competes with Rockware;
-  e. use rw to harm Rockware, its customers or its services. This includes
-     getting around access controls, scopes or rate limits, reaching data you
-     aren't allowed to see, scraping, overloading the service, or anything
-     against the terms of your Rockware agreement;
-  f. remove or change any notice of ownership or license in rw.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ROCKWARE OR ITS LICENSORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-3. Your Rockware agreement still applies
+This License is governed by the laws of the State of Ohio, as the Rockware
+Terms are. If this License and the Rockware Terms, or your other agreement
+with Rockware, conflict, that agreement controls.
 
-rw only reaches Rockware services through your account, and your use of
-those services stays under your agreement with Rockware. If this license and
-that agreement disagree, the agreement wins.
-
-4. Ownership
-
-Rockware and its licensors own rw and all rights in it. This license gives
-you no rights except those it says. If you send Rockware ideas or feedback
-about rw, Rockware may use them freely.
-
-5. Other people's software
-
-rw includes open source software from others, listed in
-THIRD_PARTY_NOTICES. Those parts are under their own licenses, and nothing
-in this license limits the rights those licenses give you.
-
-6. Ending
-
-This license ends at once if you break it, or when Rockware tells you it has
-ended. When it ends, stop using rw and delete your copies. Sections 2, 4, 7
-and 8 keep applying after it ends.
-
-7. No warranty
-
-RW IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
-AND NON-INFRINGEMENT.
-
-8. Limit of liability
-
-AS FAR AS THE LAW ALLOWS, ROCKWARE WILL NOT BE LIABLE FOR ANY INDIRECT,
-INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, OR FOR LOST PROFITS,
-DATA OR BUSINESS, ARISING FROM RW OR ITS USE, EVEN IF TOLD THEY WERE
-POSSIBLE. ROCKWARE'S TOTAL LIABILITY FOR RW WILL NOT BE MORE THAN US $100.
+For all third party components incorporated into the Software, those
+components are licensed under the original license provided by the owner of
+the applicable component, as listed in THIRD_PARTY_NOTICES. Nothing in this
+License limits the rights those licenses give you.

@@ -25,4 +25,4 @@ rw doctor                            # check your setup
 
 ## License
 
-rw is free to use with Rockware, but it isn't open source. See [LICENSE](./LICENSE) and [THIRD_PARTY_NOTICES](./THIRD_PARTY_NOTICES).
+rw is free to use with Rockware, under the [Rockware Terms of Service](https://rockwarecorp.com/terms), but it isn't open source. See [LICENSE](./LICENSE) and [THIRD_PARTY_NOTICES](./THIRD_PARTY_NOTICES).
