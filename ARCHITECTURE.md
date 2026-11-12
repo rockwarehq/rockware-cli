@@ -1,12 +1,12 @@
-# The rw command line
+# How the Rockware CLI works
 
-`rw` is Rockware on the command line. Every command calls the [developer API](https://platform.rockwarecorp.com/api/graphql/) at `/graphql`, on your Rockware host.
+The Rockware CLI (`rw`) is Rockware on the command line. Every command calls the [developer API](https://platform.rockwarecorp.com/api/graphql/) at `/graphql`, on your Rockware host.
 
 | What | Where |
 | --- | --- |
 | Entry point, exit codes | `src/main.ts`, `src/errors.ts` |
 | The command tree | `src/program.ts`, `src/commands/` |
-| Every query rw sends | `src/api/queries.ts` |
+| Every query the CLI sends | `src/api/queries.ts` |
 | Calling `/graphql` and its failures | `src/api/client.ts` |
 | Answers: envelope, JSON or text | `src/output.ts`, `src/format.ts` |
 | Profiles and hosts | `src/config.ts`, `src/session.ts` |
@@ -55,7 +55,7 @@ A **profile** is one host and one plant. `--host acme` means `https://acme-api.r
 
 ```mermaid
 sequenceDiagram
-  participant R as rw
+  participant R as Rockware CLI
   participant B as Browser
   participant I as IMM
   R->>I: GET /.well-known/oauth-authorization-server
@@ -69,12 +69,12 @@ sequenceDiagram
   R->>R: save the profile and the secret
 ```
 
-- rw checks `state` and `iss` before using the code.
-- It asks for `data:read`, or with `--scope write` also `data:write` and `webhooks:write`. Anyone who can see the plant may give reads; writes need a plant admin. If the grant is smaller than asked, rw says so.
-- The access token lasts 15 minutes. rw refreshes it a minute early, or after a `401`. Refresh tokens rotate, so a lock folder (`<config>/locks/<profile>.lock`) lets one rw refresh at a time.
+- The CLI checks `state` and `iss` before using the code.
+- It asks for `data:read`, or with `--scope write` also `data:write` and `webhooks:write`. Anyone who can see the plant may give reads; writes need a plant admin. If the grant is smaller than asked, the CLI says so.
+- The access token lasts 15 minutes. The CLI refreshes it a minute early, or after a `401`. Refresh tokens rotate, so a lock folder (`<config>/locks/<profile>.lock`) lets one copy of the CLI refresh at a time.
 - `rw auth logout` revokes the grant on the server, then forgets the secret.
 
-**With an API token** (`--with-token`): rw reads it from stdin, never from an argument, and checks it before saving.
+**With an API token** (`--with-token`): the CLI reads it from stdin, never from an argument, and checks it before saving.
 
 `--expect-site <id>` refuses to save a sign-in for any other plant.
 
@@ -82,7 +82,7 @@ sequenceDiagram
 
 ## Builds and releases
 
-`bun build --compile` puts Bun's runtime and rw in one file. `pnpm compile:all` builds every platform into `dist/release`: `rw-<version>-<os>-<arch>.tar.gz` (a `.zip` for Windows), plus `checksums.txt`. Each archive holds `rw`, `LICENSE` and `THIRD_PARTY_NOTICES`.
+`bun build --compile` puts Bun's runtime and the CLI in one file. `pnpm compile:all` builds every platform into `dist/release`: `rw-<version>-<os>-<arch>.tar.gz` (a `.zip` for Windows), plus `checksums.txt`. Each archive holds `rw`, `LICENSE` and `THIRD_PARTY_NOTICES`.
 
 To release:
 1. Bump the version in `package.json` and `src/version.ts`. A test keeps them the same.
@@ -107,4 +107,4 @@ The release uses this repo's own token. Updating the tap needs the `HOMEBREW_TAP
 
 ## The schema
 
-`schema/developer-api.graphql` is a copy of the developer API's schema. Rockware's server CI runs `schema.test.ts` against its own current schema too (with `RW_SCHEMA` pointing at it), so an API change that would break rw is caught there. When the API gains something rw should use, Rockware updates this copy first, then the command.
+`schema/developer-api.graphql` is a copy of the developer API's schema. Rockware's server CI runs `schema.test.ts` against its own current schema too (with `RW_SCHEMA` pointing at it), so an API change that would break the CLI is caught there. When the API gains something the CLI should use, Rockware updates this copy first, then the command.

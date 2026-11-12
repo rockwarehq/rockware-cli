@@ -205,7 +205,7 @@ function listenForCallback(timeoutMs: number): Promise<Callback> {
       response.end(
         failed
           ? PAGE("Sign-in didn't finish", "Go back to your terminal to see why.")
-          : PAGE("You're signed in to rw", "You can close this tab and go back to your terminal."),
+          : PAGE("You're signed in to the Rockware CLI", "You can close this tab and go back to your terminal."),
       );
       settle(url.searchParams);
     });
@@ -280,7 +280,7 @@ export async function withRefreshLock<T>(dir: string, profile: string, work: () 
         // Gone already: try again.
       }
       if (Date.now() > deadline) {
-        throw new RwError("rate_limited", "Another rw is signing in or refreshing this profile", {
+        throw new RwError("rate_limited", "Another Rockware CLI is signing in or refreshing this profile", {
           hint: "Try again in a moment.",
         });
       }

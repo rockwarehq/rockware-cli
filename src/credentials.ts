@@ -99,7 +99,7 @@ class MacKeychain implements CredentialStore {
 
   set(profile: string, credential: Credential) {
     const hex = Buffer.from(JSON.stringify(credential), "utf8").toString("hex");
-    const command = `add-generic-password -U -s ${SERVICE} -a ${profile} -l "rw (${profile})" -X ${hex}\n`;
+    const command = `add-generic-password -U -s ${SERVICE} -a ${profile} -l "Rockware CLI (${profile})" -X ${hex}\n`;
     const saved = spawnSync("security", ["-i"], { input: command, encoding: "utf8" });
     if (saved.status !== 0 || /error/i.test(saved.stderr)) {
       throw new Error(`Keychain refused the credential: ${saved.stderr.trim() || "unknown error"}`);
@@ -122,7 +122,7 @@ class SecretService implements CredentialStore {
   set(profile: string, credential: Credential) {
     const saved = spawnSync(
       "secret-tool",
-      ["store", "--label", `rw (${profile})`, "service", SERVICE, "account", profile],
+      ["store", "--label", `Rockware CLI (${profile})`, "service", SERVICE, "account", profile],
       { input: JSON.stringify(credential), encoding: "utf8" },
     );
     if (saved.status !== 0) throw new Error(`Secret Service refused the credential: ${saved.stderr.trim()}`);

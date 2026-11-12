@@ -1,7 +1,7 @@
 {
   "name": "rockware-cli",
   "version": "0.2.1",
-  "description": "rw: Rockware on the command line",
+  "description": "Rockware CLI: Rockware on the command line",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
