@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install rw, Rockware on the command line.
+# Install the Rockware CLI (`rw`).
 #
 #   curl -fsSL https://github.com/rockwarehq/rockware-cli/releases/latest/download/install.sh | sh
 #
@@ -16,7 +16,7 @@ REPO="rockwarehq/rockware-cli"
 BIN_DIR="${RW_BIN_DIR:-$HOME/.local/bin}"
 
 say() { printf '%s\n' "$*" >&2; }
-fail() { say "rw install: $*"; exit 1; }
+fail() { say "Rockware CLI install: $*"; exit 1; }
 
 need() { command -v "$1" >/dev/null 2>&1 || fail "needs $1"; }
 need curl
@@ -26,7 +26,7 @@ need uname
 case "$(uname -s)" in
   Darwin) os=darwin ;;
   Linux) os=linux ;;
-  *) fail "this script is for macOS and Linux. On Windows, download rw from https://github.com/$REPO/releases" ;;
+  *) fail "this script is for macOS and Linux. On Windows, download the Rockware CLI from https://github.com/$REPO/releases" ;;
 esac
 case "$(uname -m)" in
   arm64 | aarch64) arch=arm64 ;;
@@ -52,7 +52,7 @@ base="${RW_RELEASES:-https://github.com/$REPO/releases/download}/v$version"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-say "Downloading rw $version for ${os}-${arch}…"
+say "Downloading the Rockware CLI $version for ${os}-${arch}…"
 curl -fsSL -o "$tmp/$archive" "$base/$archive" || fail "couldn't download $base/$archive"
 curl -fsSL -o "$tmp/checksums.txt" "$base/checksums.txt" || fail "couldn't download checksums.txt"
 
@@ -70,9 +70,27 @@ mkdir -p "$BIN_DIR"
 mv "$tmp/rw" "$BIN_DIR/rw"
 chmod 755 "$BIN_DIR/rw"
 
-say "Installed rw $version to $BIN_DIR/rw"
+say "Installed the Rockware CLI $version to $BIN_DIR/rw"
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
-  *) say "Add it to your PATH: export PATH=\"$BIN_DIR:\$PATH\"" ;;
+  *)
+    # Name the file this person's shell reads, so the line can be pasted as is.
+    case "${SHELL##*/}" in
+      zsh) rc="${ZDOTDIR:-$HOME}/.zshrc" ;;
+      bash) if [ "$os" = darwin ]; then rc="$HOME/.bash_profile"; else rc="$HOME/.bashrc"; fi ;;
+      fish) rc="" ;;
+      *) rc="$HOME/.profile" ;;
+    esac
+    say ""
+    say "$BIN_DIR isn't on your PATH yet, so your shell can't find the rw command. To add it, run:"
+    say ""
+    if [ -z "$rc" ]; then
+      say "  fish_add_path \"$BIN_DIR\""
+    else
+      say "  echo 'export PATH=\"$BIN_DIR:\$PATH\"' >> \"$rc\""
+    fi
+    say ""
+    say "Then open a new terminal."
+    ;;
 esac
 say "Next: rw auth login --host <your tenant>"

@@ -18,7 +18,7 @@ curl -fsSL https://github.com/rockwarehq/rockware-cli/releases/latest/download/i
 brew install rockwarehq/tap/rw
 ```
 
-The script checks the download against its checksum, and puts `rw` in `~/.local/bin`. On Windows, download the `.zip` from the [releases](https://github.com/rockwarehq/rockware-cli/releases).
+The script checks the download against its checksum, and puts `rw` in `~/.local/bin`. If that folder isn't on your PATH (it isn't on a new Mac), the script prints the line that adds it for your shell. Run that line, then open a new terminal. On Windows, download the `.zip` from the [releases](https://github.com/rockwarehq/rockware-cli/releases).
 
 From source: `pnpm install`, then `pnpm dev -- <command>`, or build one file with `pnpm compile` (needs [Bun](https://bun.sh)). See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
