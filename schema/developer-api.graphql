@@ -32,12 +32,40 @@ type CustomerConnection {
 }
 
 """
-Who the order is for. Made the first time, renamed if the name changes.
+Who the order is for. Found by externalId, never by name: made the first time, renamed if the name changes.
 """
 input CustomerInput {
   """Its id in your system."""
   externalId: String!
+
+  """
+  Its id in IMM, to give a customer made in IMM this externalId. Only needed the first time; without it a new externalId makes a new customer, and a taken name is refused (DUPLICATE_NAME).
+  """
+  id: ID
   name: String!
+}
+
+"""A customer. Fields left out are left as they are."""
+input CustomerUpsertInput {
+  """Its id in your system."""
+  externalId: String!
+
+  """
+  Its id in IMM, to give a record made in IMM this externalId. Only needed the first time; without it a new externalId makes a new record.
+  """
+  id: ID
+
+  """Needed to make a new customer. Unique at the plant."""
+  name: String
+}
+
+"""
+How a station counts: a part per cycle, a quantity per cycle, or a quantity per time.
+"""
+enum CycleMode {
+  DISCRETE
+  QUANTITY_PER_CYCLE
+  QUANTITY_PER_INTERVAL
 }
 
 """
@@ -50,6 +78,164 @@ An exact decimal number, as a string (e.g. "12.5000"), so no precision is lost.
 """
 scalar Decimal
 
+"""A field of a custom entity."""
+type EntityField {
+  description: String
+
+  """true: the value is a list of them."""
+  isList: Boolean!
+
+  """Its key in a record's values."""
+  key: String!
+  label: String!
+
+  """A SELECT field's choices."""
+  options: [EntityFieldOption!]
+
+  """An OBJECT field's entity, by key."""
+  refModel: String
+  required: Boolean!
+  type: EntityFieldType!
+}
+
+"""A field, found by its key. Fields left out are left as they are."""
+input EntityFieldInput {
+  description: String
+  isList: Boolean
+
+  """Its key in a record's values, e.g. cavity_count."""
+  key: String!
+
+  """Needed for a new field."""
+  label: String
+
+  """For a SELECT field: its choices."""
+  options: [EntityFieldOptionInput!]
+
+  """For an OBJECT field: the key of the entity it points at."""
+  refModel: String
+  required: Boolean
+  sortOrder: Int
+
+  """Needed for a new field."""
+  type: EntityFieldType
+}
+
+type EntityFieldOption {
+  label: String
+  value: String!
+}
+
+input EntityFieldOptionInput {
+  label: String
+  value: String!
+}
+
+"""What a custom field holds."""
+enum EntityFieldType {
+  """true or false."""
+  BOOLEAN
+
+  """A date, as a string (e.g. 2026-11-12)."""
+  DATE
+
+  """Any JSON."""
+  JSON
+
+  """A number."""
+  NUMBER
+
+  """A record of another entity (refModel), by its id."""
+  OBJECT
+
+  """One of the field's options, by value."""
+  SELECT
+
+  """A string."""
+  TEXT
+
+  """A point in time, as an ISO 8601 string."""
+  TIMESTAMP
+}
+
+"""
+A custom entity: one of the plant's own kinds of record, and its fields.
+"""
+type EntityModel {
+  createdAt: DateTime!
+  description: String
+  fields: [EntityField!]!
+  id: ID!
+
+  """Its key, the plant's own name for it in code, e.g. mold."""
+  key: String!
+  label: String!
+  updatedAt: DateTime!
+
+  """Goes up each time its fields change."""
+  version: Int!
+}
+
+"""
+A custom entity, found by its key. Fields left out are left as they are.
+"""
+input EntityModelInput {
+  description: String
+
+  """Fields to add or change. Fields not listed are left as they are."""
+  fields: [EntityFieldInput!]
+
+  """Its key, e.g. mold."""
+  key: String!
+
+  """Needed for a new entity."""
+  label: String
+}
+
+"""A record of a custom entity."""
+type EntityRecord {
+  createdAt: DateTime!
+  deleted: Boolean!
+
+  """
+  Its ids in your own systems: the externalId you sent it with, one for each source.
+  """
+  externalIds: [ExternalId!]!
+  id: ID!
+
+  """Its entity's key."""
+  model: String!
+  name: String!
+  updatedAt: DateTime!
+
+  """Its values, by field key. An OBJECT field holds a record's id."""
+  values: JSON!
+}
+
+type EntityRecordConnection {
+  nodes: [EntityRecord!]!
+  pageInfo: PageInfo!
+}
+
+"""A custom entity record. Fields left out are left as they are."""
+input EntityRecordInput {
+  """Its id in your system."""
+  externalId: String!
+
+  """
+  Its id in IMM, to give a record made in IMM this externalId. Only needed the first time; without it a new externalId makes a new record.
+  """
+  id: ID
+
+  """Its name. Left out, a new record gets one like "Mold 3"."""
+  name: String
+
+  """
+  Values by field key: fields left out stay as they are; null clears one. An OBJECT field takes a record's id, or { "externalId": "…" } for one you sent from the same source.
+  """
+  values: JSON
+}
+
 """A record's id in one of your own systems."""
 type ExternalId {
   id: String!
@@ -58,10 +244,12 @@ type ExternalId {
   source: String!
 }
 
-"""Records you can't send in, so you link your ids to them instead."""
+"""Records made in IMM that you can link your ids to."""
 enum ExternalIdKind {
+  CUSTOMER
   JOB
   STATION
+  TOOL
   WORKCENTER
 }
 
@@ -69,12 +257,17 @@ input ExternalIdLinkInput {
   """Its id in your system."""
   externalId: String!
 
-  """The record's id in IMM (from stations, jobs or workcenters)."""
+  """The record's id in IMM."""
   id: ID!
 
   """true takes this link off instead."""
   remove: Boolean
 }
+
+"""
+Any JSON value: an object, a list, a string, a number, true, false or null.
+"""
+scalar JSON
 
 """
 A job: what a station runs, with its standards. Fields are from its current version.
@@ -86,18 +279,35 @@ type Job {
   description: String
 
   """
+  The stations that can run it. Its profile must count the same way as the station, and it must carry a label the station's job filter wants, if it has one. A run that breaks this is refused (PROFILE_MISMATCH, LABEL_FILTER_MISMATCH). A station also needs a workcenter to have a lineup. At most 25 stations or jobs per request.
+  """
+  eligibleStations: [Station!]!
+
+  """
   Its ids in your own systems: the externalId you sent it with, one for each source.
   """
   externalIds: [ExternalId!]!
   id: ID!
+
+  """The products the job makes."""
+  items: [JobItem!]!
   name: String
   productsPerCycle: Int
+
+  """The station profile the job's standards follow."""
+  profileId: ID
 
   """Seconds per cycle."""
   standardCycle: Decimal
   standardQuantity: Decimal
   standardRate: Decimal
+
+  """What standardRate is counted per."""
+  standardRatePeriod: RatePeriod
   standardRateUnit: String
+
+  """The tools the job can run with."""
+  tools: [Tool!]!
   updatedAt: DateTime!
   version: Int
 }
@@ -105,6 +315,73 @@ type Job {
 type JobConnection {
   nodes: [Job!]!
   pageInfo: PageInfo!
+}
+
+"""
+A job. Fields left out are left as they are; null clears one that can be empty.
+"""
+input JobInput {
+  description: String
+
+  """Its id in your system."""
+  externalId: String!
+
+  """
+  Its id in IMM, to give a record made in IMM this externalId. Only needed the first time; without it a new externalId makes a new record.
+  """
+  id: ID
+
+  """Listed items are added or updated; ones not listed are left alone."""
+  items: [JobItemInput!]
+
+  """Needed to make a new job."""
+  name: String
+  productsPerCycle: Int
+
+  """The station profile (kind of machine) the job is made for."""
+  profileId: ID
+
+  """Seconds per cycle."""
+  standardCycle: Float
+  standardQuantity: Float
+  standardRate: Float
+  standardRatePeriod: RatePeriod
+  standardRateUnit: String
+
+  """
+  Tools to put on the job, by externalId or IMM id. Tools not listed stay on.
+  """
+  tools: [String!]
+}
+
+"""A product the job makes, and the tool and cavity it comes from."""
+type JobItem {
+  """One of the tool's cavities."""
+  cavityId: ID
+  id: ID!
+  isActive: Boolean!
+  product: Product
+
+  """How many of the product one cycle makes."""
+  quantity: Int!
+  tool: Tool
+}
+
+"""A product the job makes. Found by product, tool and cavity together."""
+input JobItemInput {
+  """A cavity's name on that tool."""
+  cavity: String
+
+  """The product's externalId, its IMM id, or its SKU."""
+  product: String!
+
+  """How many one cycle makes. Defaults to 1 for a new item."""
+  quantity: Int
+
+  """
+  The tool it comes from: its externalId or IMM id. The tool must be on the job.
+  """
+  tool: String
 }
 
 """A run in a station's lineup now, with its counts and predicted times."""
@@ -218,7 +495,7 @@ type Mutation {
   deleteWebhook(id: ID!): Boolean!
 
   """
-  Give up to 100 stations, jobs or workcenters your own ids, by their id in IMM. From then on you can use your id wherever the API takes theirs, and renaming them in IMM changes nothing. An id another record already has is refused, not moved. All or nothing. Safe to send again.
+  Give up to 100 records made in IMM your own ids, by their id in IMM. From then on you can use your id wherever the API takes theirs, and renaming them in IMM changes nothing. An id another record already has is refused, not moved. All or nothing. Safe to send again.
   """
   linkExternalIds(
     kind: ExternalIdKind!
@@ -263,6 +540,45 @@ type Mutation {
   Change a webhook's URL, events or whether it's on. Needs webhooks:write.
   """
   updateWebhook(id: ID!, webhook: WebhookUpdateInput!): Webhook!
+
+  """Send up to 100 customers. All or nothing."""
+  upsertCustomers(
+    customers: [CustomerUpsertInput!]!
+
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+  ): UpsertCustomersPayload!
+
+  """
+  Make or change up to 100 custom entities and their fields, by key. A field can point at an entity sent in the same call. All or nothing.
+  """
+  upsertEntityModels(models: [EntityModelInput!]!): UpsertEntityModelsPayload!
+
+  """Send up to 100 records of one custom entity. All or nothing."""
+  upsertEntityRecords(
+    """The entity's key."""
+    model: String!
+    records: [EntityRecordInput!]!
+
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+  ): UpsertEntityRecordsPayload!
+
+  """
+  Send up to 100 jobs, with their tools and the products they make. All or nothing. Send tools and products first.
+  """
+  upsertJobs(
+    jobs: [JobInput!]!
+
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+  ): UpsertJobsPayload!
 
   """
   Send up to 100 materials. All or nothing: if one has a problem, none are saved.
@@ -311,6 +627,33 @@ type Mutation {
     """
     source: String
   ): UpsertProductsPayload!
+
+  """Send up to 100 stations. All or nothing. Send workcenters first."""
+  upsertStations(
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+    stations: [StationInput!]!
+  ): UpsertStationsPayload!
+
+  """Send up to 100 tools, with their cavities. All or nothing."""
+  upsertTools(
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+    tools: [ToolInput!]!
+  ): UpsertToolsPayload!
+
+  """Send up to 100 workcenters. All or nothing."""
+  upsertWorkcenters(
+    """
+    The name of the system the ids come from, e.g. "erp". Use the same one every time. Defaults to "erp".
+    """
+    source: String
+    workcenters: [WorkcenterInput!]!
+  ): UpsertWorkcentersPayload!
 }
 
 """A production order."""
@@ -646,6 +989,29 @@ type Query {
     """Only records changed at or after this time."""
     updatedSince: DateTime
   ): CustomerConnection!
+  entityModel(key: String!): EntityModel
+
+  """The custom entities at your site, with their fields."""
+  entityModels: [EntityModel!]!
+  entityRecord(id: ID!): EntityRecord
+
+  """One custom entity's records, oldest change first."""
+  entityRecords(
+    """The endCursor of the previous page."""
+    after: String
+
+    """How many (1 to 100, default 50)."""
+    first: Int
+
+    """Include deleted records (they have deleted: true)."""
+    includeDeleted: Boolean
+
+    """The entity's key."""
+    model: String!
+
+    """Only records changed at or after this time."""
+    updatedSince: DateTime
+  ): EntityRecordConnection!
   job(id: ID!): Job
 
   """Job records at your site, oldest change first."""
@@ -743,6 +1109,22 @@ type Query {
     """Only records changed at or after this time."""
     updatedSince: DateTime
   ): StationConnection!
+  tool(id: ID!): Tool
+
+  """Tool records at your site, oldest change first."""
+  tools(
+    """The endCursor of the previous page."""
+    after: String
+
+    """How many (1 to 100, default 50)."""
+    first: Int
+
+    """Include deleted records (they have deletedAt set)."""
+    includeDeleted: Boolean
+
+    """Only records changed at or after this time."""
+    updatedSince: DateTime
+  ): ToolConnection!
 
   """A webhook's deliveries, newest first. Needs webhooks:write."""
   webhookDeliveries(
@@ -770,6 +1152,12 @@ type Query {
     """Only records changed at or after this time."""
     updatedSince: DateTime
   ): WorkcenterConnection!
+}
+
+enum RatePeriod {
+  HOUR
+  MINUTE
+  SECOND
 }
 
 """If errors is not empty, the order wasn't changed."""
@@ -804,6 +1192,11 @@ type Station {
   description: String
 
   """
+  The jobs it can run, by name: the ones you can send to its lineup. Its profile must count the same way as the station, and it must carry a label the station's job filter wants, if it has one. A run that breaks this is refused (PROFILE_MISMATCH, LABEL_FILTER_MISMATCH). At most 25 stations or jobs per request.
+  """
+  eligibleJobs: [Job!]!
+
+  """
   Its ids in your own systems: the externalId you sent it with, one for each source.
   """
   externalIds: [ExternalId!]!
@@ -825,6 +1218,115 @@ type StationConnection {
   pageInfo: PageInfo!
 }
 
+"""
+A station: one machine or work spot. Fields left out are left as they are; null clears one that can be empty. A station that follows a profile gets how it counts from the profile; only its speed can be set here.
+"""
+input StationInput {
+  cycleMode: CycleMode
+  description: String
+
+  """
+  Seconds of no cycles before it counts as down (downtimeDetect), or the share of standard speed below which it's slow (slowDetect) and above which it's fast (fastDetect). null uses its workcenter's; 0 turns it off.
+  """
+  downtimeDetect: Float
+
+  """Its id in your system."""
+  externalId: String!
+  fastDetect: Float
+
+  """
+  Its id in IMM, to give a record made in IMM this externalId. Only needed the first time; without it a new externalId makes a new record.
+  """
+  id: ID
+
+  """Needed to make a new station. Unique at the plant."""
+  name: String
+
+  """Follow this station profile. null stops following; the values stay."""
+  profileId: ID
+  quantityUnit: String
+  slowDetect: Float
+  sortOrder: Int
+
+  """Seconds per cycle."""
+  standardCycle: Float
+  standardQuantity: Float
+  standardRate: Float
+  standardRatePeriod: RatePeriod
+  standardRateUnit: String
+
+  """Use the profile's usual speed instead of its own."""
+  useProfileSpeed: Boolean
+
+  """Which of the profile's variations."""
+  variationId: ID
+
+  """
+  Its workcenter: the workcenter's externalId or IMM id. null takes it out of its workcenter.
+  """
+  workcenter: String
+}
+
+"""
+A tool, such as a mold or a die, with its cavities. Fields are from its current version.
+"""
+type Tool {
+  archivedAt: DateTime
+  cavities: [ToolCavity!]!
+  cavityCount: Int
+  createdAt: DateTime!
+  deletedAt: DateTime
+  description: String
+
+  """
+  Its ids in your own systems: the externalId you sent it with, one for each source.
+  """
+  externalIds: [ExternalId!]!
+  id: ID!
+  name: String
+  updatedAt: DateTime!
+  version: Int
+}
+
+"""One cavity of a mold: where one part comes from in each cycle."""
+type ToolCavity {
+  id: ID!
+  name: String
+  position: Int
+}
+
+"""A cavity, found by its name on the tool."""
+input ToolCavityInput {
+  name: String!
+  position: Int
+}
+
+type ToolConnection {
+  nodes: [Tool!]!
+  pageInfo: PageInfo!
+}
+
+"""
+A tool. Fields left out are left as they are; null clears one that can be empty.
+"""
+input ToolInput {
+  """Listed cavities are added or updated; ones not listed are left alone."""
+  cavities: [ToolCavityInput!]
+  cavityCount: Int
+  description: String
+
+  """Its id in your system."""
+  externalId: String!
+
+  """
+  Its id in IMM, to give a record made in IMM this externalId. Only needed the first time; without it a new externalId makes a new record.
+  """
+  id: ID
+
+  """Needed to make a new tool."""
+  name: String
+}
+
 """What a write did."""
 enum UpsertAction {
   """A new record was made."""
@@ -837,6 +1339,30 @@ enum UpsertAction {
   UPDATED
 }
 
+"""
+If errors is not empty, nothing was saved: fix them and send the whole list again.
+"""
+type UpsertCustomersPayload {
+  errors: [UpsertError!]!
+  results: [UpsertedCustomer!]!
+}
+
+"""
+If errors is not empty, nothing was saved: fix them and send the whole list again.
+"""
+type UpsertEntityModelsPayload {
+  errors: [UpsertError!]!
+  results: [UpsertedEntityModel!]!
+}
+
+"""
+If errors is not empty, nothing was saved: fix them and send the whole list again.
+"""
+type UpsertEntityRecordsPayload {
+  errors: [UpsertError!]!
+  results: [UpsertedEntityRecord!]!
+}
+
 """Something wrong with what was sent. Nothing it is about was saved."""
 type UpsertError {
   """A short code to check for, e.g. UNKNOWN_PRODUCT."""
@@ -845,6 +1371,14 @@ type UpsertError {
   """Which input it is about, e.g. products[2].sku."""
   field: String
   message: String!
+}
+
+"""
+If errors is not empty, nothing was saved: fix them and send the whole list again.
+"""
+type UpsertJobsPayload {
+  errors: [UpsertError!]!
+  results: [UpsertedJob!]!
 }
 
 """
@@ -880,6 +1414,54 @@ type UpsertProductsPayload {
   results: [UpsertedProduct!]!
 }
 
+"""
+If errors is not empty, nothing was saved: fix them and send the whole list again.
+"""
+type UpsertStationsPayload {
+  errors: [UpsertError!]!
+  results: [UpsertedStation!]!
+}
+
+"""
+If errors is not empty, nothing was saved: fix them and send the whole list again.
+"""
+type UpsertToolsPayload {
+  errors: [UpsertError!]!
+  results: [UpsertedTool!]!
+}
+
+"""
+If errors is not empty, nothing was saved: fix them and send the whole list again.
+"""
+type UpsertWorkcentersPayload {
+  errors: [UpsertError!]!
+  results: [UpsertedWorkcenter!]!
+}
+
+type UpsertedCustomer {
+  action: UpsertAction!
+  customer: Customer
+  externalId: String!
+}
+
+type UpsertedEntityModel {
+  action: UpsertAction!
+  key: String!
+  model: EntityModel
+}
+
+type UpsertedEntityRecord {
+  action: UpsertAction!
+  externalId: String!
+  record: EntityRecord
+}
+
+type UpsertedJob {
+  action: UpsertAction!
+  externalId: String!
+  job: Job
+}
+
 type UpsertedMaterial {
   action: UpsertAction!
   externalId: String!
@@ -896,6 +1478,24 @@ type UpsertedProductionRun {
   action: UpsertAction!
   externalId: String!
   run: ProductionRun
+}
+
+type UpsertedStation {
+  action: UpsertAction!
+  externalId: String!
+  station: Station
+}
+
+type UpsertedTool {
+  action: UpsertAction!
+  externalId: String!
+  tool: Tool
+}
+
+type UpsertedWorkcenter {
+  action: UpsertAction!
+  externalId: String!
+  workcenter: Workcenter
 }
 
 """
@@ -1017,4 +1617,29 @@ type Workcenter {
 type WorkcenterConnection {
   nodes: [Workcenter!]!
   pageInfo: PageInfo!
+}
+
+"""
+A workcenter: a group of stations. Fields left out are left as they are.
+"""
+input WorkcenterInput {
+  description: String
+
+  """
+  Seconds of no cycles before it counts as down (downtimeDetect), or the share of standard speed below which it's slow (slowDetect) and above which it's fast (fastDetect).
+  """
+  downtimeDetect: Float
+
+  """Its id in your system."""
+  externalId: String!
+  fastDetect: Float
+
+  """
+  Its id in IMM, to give a record made in IMM this externalId. Only needed the first time; without it a new externalId makes a new record.
+  """
+  id: ID
+
+  """Needed to make a new workcenter."""
+  name: String
+  slowDetect: Float
 }

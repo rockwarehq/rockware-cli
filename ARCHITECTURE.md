@@ -22,15 +22,17 @@ Commands are `rw <noun> <verb>`. A noun on its own shows its help.
 
 - `auth login | status | logout`, and `profile list | use | remove`
 - `site`
-- `<records> list | show <id>` for `workcenters`, `stations`, `jobs`, `products`, `materials`, `customers`, `orders`
-- `materials | products | orders upsert [file]`, matched by `externalId`
+- `<records> list | show <id>` for `workcenters`, `stations`, `jobs`, `tools`, `products`, `materials`, `customers`, `orders`, `production-runs`
+- `workcenters | stations | materials | products | tools | jobs | customers | orders | production-runs upsert [file]`, matched by `externalId`
+- `lineup show <station-id> | sequence <station> <runs...>`
+- `entities list | show <key> | upsert [file]` and `entity-records list <model> | show <id> | upsert <model> [file]`: custom entities, in one general shape
 - `webhooks list | events | create | update | delete | rotate-secret | test | deliveries | redeliver`
 - `api <query>`: any GraphQL, for what the named commands don't cover
 - `doctor`, `commands`, `completion bash|zsh|fish`
 
 `rw commands --json` lists all of them, with their arguments and flags.
 
-**To add a kind of record**, add it to `RECORD_KINDS` in `src/api/queries.ts`. It gets `list` and `show`. **To add a write**, add its mutation to `queries.ts` and its command next to the others in `src/commands/writes.ts`. Then run the tests. The schema test checks the new query, and the surface test asks you to update `surface.txt`.
+**To add a kind of record**, add it to `RECORD_KINDS` in `src/api/queries.ts`. It gets `list` and `show`, under `command` if its group name isn't the query's (`production-runs`). **To add a write**, add its mutation to `queries.ts` and its command next to the others in `src/commands/writes.ts` (most are one `batch(...)` line). Then run the tests. The schema test checks the new query, and the surface test asks you to update `surface.txt`.
 
 ## Answers
 
@@ -100,7 +102,8 @@ The release uses this repo's own token. Updating the tap needs the `HOMEBREW_TAP
 - `schema.test.ts`: every query against `schema/developer-api.graphql`;
 - `surface.test.ts`: the commands and flags against `surface.txt`;
 - `oauth.test.ts`: the browser sign-in and API failures, against a small fake server;
-- `output.test.ts` and `session.test.ts`: answers, exit codes, profiles, secrets.
+- `output.test.ts` and `session.test.ts`: answers, exit codes, profiles, secrets;
+- `commands.test.ts`: commands end to end against a fake `/graphql`: what each sends, and what it answers.
 
 ## The schema
 

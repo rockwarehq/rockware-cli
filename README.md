@@ -46,16 +46,26 @@ Each sign-in is a **profile**: one host and one plant. Sign in again with `-P <n
 | | |
 | --- | --- |
 | `rw site` | The plant you're signed in to |
-| `rw <records> list` | `workcenters`, `stations`, `jobs`, `products`, `materials`, `customers`, `orders`. Takes `--limit`, `--all`, `--after <cursor>`, `--updated-since <time>`, `--include-deleted` |
+| `rw <records> list` | `workcenters`, `stations`, `jobs`, `tools`, `products`, `materials`, `customers`, `orders`, `production-runs`. Takes `--limit`, `--all`, `--after <cursor>`, `--updated-since <time>`, `--include-deleted` |
 | `rw <records> show <id>` | One record |
+| `rw workcenters upsert <file>` | Up to 100 workcenters. All or nothing |
+| `rw stations upsert <file>` | Up to 100 stations. Send workcenters first |
 | `rw materials upsert <file>` | Up to 100 materials. All or nothing |
 | `rw products upsert <file>` | Up to 100 products, with bills of materials. Send materials first |
+| `rw tools upsert <file>` | Up to 100 tools, with their cavities |
+| `rw jobs upsert <file>` | Up to 100 jobs, with their tools and the products they make. Send tools and products first |
+| `rw customers upsert <file>` | Up to 100 customers |
 | `rw orders upsert <file>` | One order, with its customer and lines |
+| `rw production-runs upsert <file>` | Up to 100 runs to stations' lineups, by your work order ids |
+| `rw lineup show <station-id>` | A station's lineup now, with predicted times |
+| `rw lineup sequence <station> <runs…>` | Put queued runs in order, by your ids |
+| `rw entities list \| show <key> \| upsert <file>` | Custom entities and their fields, by key |
+| `rw entity-records list <model> \| show <id> \| upsert <model> <file>` | A custom entity's records, with values as JSON |
 | `rw webhooks …` | `list`, `events`, `create`, `update`, `delete`, `rotate-secret`, `test`, `deliveries`, `redeliver` |
 | `rw api '<graphql>'` | Any query or mutation, with `--var name=value` |
 | `rw completion zsh` | Shell completion (`bash`, `zsh`, `fish`) |
 
-Upserts read a JSON file, `-` for stdin, or `--data '<json>'`. Records are matched by your `externalId`, so sending the same file again is safe. `--source` names the system the ids come from (default `erp`). See the [developer API docs](https://platform.rockwarecorp.com/api/graphql-writes/) for the fields.
+Upserts read a JSON file, `-` for stdin, or `--data '<json>'`. Records are matched by your `externalId`, so sending the same file again is safe. Never by name: to use a record made in Rockware, send its Rockware `id` with your `externalId` the first time. `--source` names the system the ids come from (default `erp`). See the [developer API docs](https://platform.rockwarecorp.com/api/graphql-writes/) for the fields.
 
 ## For scripts and agents
 

@@ -4,6 +4,8 @@ import { authCommand } from "./commands/auth.js";
 import { commandsCommand } from "./commands/catalog.js";
 import { completionCommand } from "./commands/completion.js";
 import { doctorCommand } from "./commands/doctor.js";
+import { entitiesCommand, entityRecordsCommand } from "./commands/entities.js";
+import { lineupCommand } from "./commands/lineup.js";
 import { profileCommand } from "./commands/profile.js";
 import { recordCommands, siteCommand } from "./commands/records.js";
 import { webhooksCommand } from "./commands/webhooks.js";
@@ -36,6 +38,9 @@ export function buildProgram(io: () => IO = processIO): Command {
     if (upsert) group.addCommand(upsert(io));
     program.addCommand(group);
   }
+  program.addCommand(lineupCommand(io));
+  program.addCommand(entitiesCommand(io));
+  program.addCommand(entityRecordsCommand(io));
   program.addCommand(webhooksCommand(io));
   program.addCommand(apiCommand(io));
   program.addCommand(doctorCommand(io));
